@@ -472,7 +472,7 @@
                     "console_http_path": "/",
                     "console_http_port": 80,
                     "console_resolution": "1024x768",
-                    "container_id": "302a4c6c4fb06d2d3c67ad69a3ca0ba79d854acb360383e9c5e79fc6ca5b7549",
+                    "container_id": "ea25aa5c820d9d19a985c900137b2b679562878b6e6f9ed04e67e96b36a46588",
                     "environment": "",
                     "extra_hosts": "",
                     "extra_volumes": [
@@ -517,15 +517,16 @@
                     "console_http_path": "/",
                     "console_http_port": 80,
                     "console_resolution": "1024x768",
-                    "container_id": "42fafb22964dd0f2201791ddec6fd88d39df47b7430371e2630bcc83d7f89260",
+                    "container_id": "9b627a1b61c950c976ac4cb1b10fbd788fd533daef23057124be98b1e64b976b",
                     "environment": "",
                     "extra_hosts": "",
                     "extra_volumes": [
-                        "/root"
+                        "/root",
+                        "/etc/frr"
                     ],
                     "image": "nsdcourse/frr:latest",
                     "mac_address": "02:42:ab:9b:3a:00",
-                    "start_command": null,
+                    "start_command": "/start.sh",
                     "usage": ""
                 },
                 "symbol": ":/symbols/affinity/circle/blue/router.svg",
@@ -562,7 +563,7 @@
                     "console_http_path": "/",
                     "console_http_port": 80,
                     "console_resolution": "1024x768",
-                    "container_id": "bd65784ef2dbf44cafc43b150a87720c52da40b758014873f4acb96dc4187f7b",
+                    "container_id": "d6504ed4151dca746e75bf4460374c960f0baf7a0bf78947b9f39c599205e76f",
                     "environment": "",
                     "extra_hosts": "",
                     "extra_volumes": [
@@ -607,15 +608,16 @@
                     "console_http_path": "/",
                     "console_http_port": 80,
                     "console_resolution": "1024x768",
-                    "container_id": "58275a939b28da0e3195864b5dfd8db422ebad654d7356aa90ee9ca9c010e332",
+                    "container_id": "b875fe466014a86e088e71af6a6c5578ebe51072f11a63f6cfa323421466830f",
                     "environment": "",
                     "extra_hosts": "",
                     "extra_volumes": [
-                        "/root"
+                        "/root",
+                        "/etc/frr"
                     ],
                     "image": "nsdcourse/frr:latest",
                     "mac_address": "02:42:3e:77:8f:00",
-                    "start_command": null,
+                    "start_command": "/start.sh",
                     "usage": ""
                 },
                 "symbol": ":/symbols/affinity/circle/blue/router.svg",
@@ -652,7 +654,7 @@
                     "console_http_path": "/",
                     "console_http_port": 80,
                     "console_resolution": "1024x768",
-                    "container_id": "4fe87dc06c0c5876a8e6c5cc55b54c4bfcd082a832bed9e8cef110159ffdfd71",
+                    "container_id": "b2a80dedefa425ae7d72f78d6b0f2981562fbf907ae0ba025920cf37667ea31d",
                     "environment": "",
                     "extra_hosts": "",
                     "extra_volumes": [
@@ -697,7 +699,7 @@
                     "console_http_path": "/",
                     "console_http_port": 80,
                     "console_resolution": "1024x768",
-                    "container_id": "85afa3fc4436f1747289c49d04c8ea743a41df3131188e030526c3afd26a36c9",
+                    "container_id": "c6d578630324ab9a8089f12e7f1aa086a814f8d35091ff80989d1ac3afbfbb86",
                     "environment": "",
                     "extra_hosts": "",
                     "extra_volumes": [
@@ -742,7 +744,7 @@
                     "console_http_path": "/",
                     "console_http_port": 80,
                     "console_resolution": "1024x768",
-                    "container_id": "06a18b051227b944bd4012bf2fc22ee65875218ecbf3336f68d8d5597800d5c5",
+                    "container_id": "4f8fb2c5a83e9bf300137c39fbc972e7a5b81621f53e129f455e6dc5452a2c78",
                     "environment": "",
                     "extra_hosts": "",
                     "extra_volumes": [
@@ -787,15 +789,16 @@
                     "console_http_path": "/",
                     "console_http_port": 80,
                     "console_resolution": "1024x768",
-                    "container_id": "49cb79fb1eeb305aa7b39ff8b3b877252437063a74764890178277f0557d30c3",
+                    "container_id": "01ebb103188acf69d4fe4b67aa3a783cc27ebb79d35d77b96e83b58483ff5bef",
                     "environment": "",
                     "extra_hosts": "",
                     "extra_volumes": [
-                        "/root"
+                        "/root",
+                        "/etc/frr"
                     ],
                     "image": "nsdcourse/frr:latest",
                     "mac_address": "02:42:68:48:70:00",
-                    "start_command": null,
+                    "start_command": "/start.sh",
                     "usage": ""
                 },
                 "symbol": ":/symbols/affinity/circle/blue/router.svg",
@@ -832,15 +835,16 @@
                     "console_http_path": "/",
                     "console_http_port": 80,
                     "console_resolution": "1024x768",
-                    "container_id": "688d1e8e1dd363ace20c857c15272ebff0962021d82b1b4444fcf6a2d2dc489b",
+                    "container_id": "5845b85a88828df36aad308aa54392bf6a1e5896dddc74320049b5c190c728d4",
                     "environment": "",
                     "extra_hosts": "",
                     "extra_volumes": [
-                        "/root"
+                        "/root",
+                        "/etc/frr"
                     ],
                     "image": "nsdcourse/frr:latest",
                     "mac_address": "02:42:09:b1:26:00",
-                    "start_command": null,
+                    "start_command": "/start.sh",
                     "usage": ""
                 },
                 "symbol": ":/symbols/affinity/circle/red/router2.svg",
@@ -877,15 +881,16 @@
                     "console_http_path": "/",
                     "console_http_port": 80,
                     "console_resolution": "1024x768",
-                    "container_id": "e7c202d3b2dd1a254a6e6cdbfda140f5a89fa787febf7739cdbe69306197c623",
+                    "container_id": "8e5e13487066d06d14262484e70e17a77915f429922f2c52641ae92c2f17825c",
                     "environment": "",
                     "extra_hosts": "",
                     "extra_volumes": [
-                        "/root"
+                        "/root",
+                        "/etc/frr"
                     ],
                     "image": "nsdcourse/frr:latest",
                     "mac_address": "02:42:db:99:28:00",
-                    "start_command": null,
+                    "start_command": "/start.sh",
                     "usage": ""
                 },
                 "symbol": ":/symbols/affinity/circle/red/router2.svg",
@@ -922,15 +927,16 @@
                     "console_http_path": "/",
                     "console_http_port": 80,
                     "console_resolution": "1024x768",
-                    "container_id": "0dc5ffffddeab4f588b1db4d37372cec938987b323fdd83d37fccb6e355ec767",
+                    "container_id": "866ba4a314d5241a7ed996f21e273a6f3611bb4bc801ce39f8c9938d3832a334",
                     "environment": "",
                     "extra_hosts": "",
                     "extra_volumes": [
-                        "/root"
+                        "/root",
+                        "/etc/frr"
                     ],
                     "image": "nsdcourse/frr:latest",
                     "mac_address": "02:42:07:95:b9:00",
-                    "start_command": null,
+                    "start_command": "/start.sh",
                     "usage": ""
                 },
                 "symbol": ":/symbols/affinity/circle/red/router2.svg",
@@ -967,15 +973,16 @@
                     "console_http_path": "/",
                     "console_http_port": 80,
                     "console_resolution": "1024x768",
-                    "container_id": "cb10372d7b9219d17694ca32fcdb934222934894206f92fb2dd07a2cb005ea8c",
+                    "container_id": "1c9247ca8b466eebf7eb13eec87a7a8d24a7434b6e4dd16a94d2c47c6ba3ded0",
                     "environment": "",
                     "extra_hosts": "",
                     "extra_volumes": [
-                        "/root"
+                        "/root",
+                        "/etc/frr"
                     ],
                     "image": "nsdcourse/frr:latest",
                     "mac_address": "02:42:a9:21:8d:00",
-                    "start_command": null,
+                    "start_command": "/start.sh",
                     "usage": ""
                 },
                 "symbol": ":/symbols/affinity/circle/red/router2.svg",
