@@ -1,0 +1,48 @@
+interface eth1
+ ip address 10.0.0.6/30
+
+interface eth0
+ ip address 10.0.0.17/30
+
+interface lo
+ ip address 1.255.0.2/32
+
+router ospf
+ router-id 1.255.0.2
+ network 1.255.0.2/32 area 0
+ network 10.0.0.16/30 area 0
+ exit
+
+mpls ldp
+ router-id 1.255.0.2
+ ordered-control
+ address-family ipv4
+  discovery transport-address 1.255.0.2
+  interface lo
+  interface eth0
+
+router bgp 100
+ bgp router-id 1.255.0.2
+ neighbor 1.255.0.1 remote-as 100
+ neighbor 1.255.0.1 update-source 1.255.0.2
+ neighbor 1.255.0.3 remote-as 100
+ neighbor 1.255.0.3 update-source 1.255.0.2
+ address-family ipv4 unicast
+  neighbor 1.255.0.1 next-hop-self
+  neighbor 1.255.0.3 next-hop-self
+ address-family ipv4 vpn
+  neighbor 1.255.0.1 activate
+  neighbor 1.255.0.1 next-hop-self
+  neighbor 1.255.0.3 activate
+  neighbor 1.255.0.3 next-hop-self
+
+router bgp 100 vrf vpnA
+ neighbor 10.0.0.5 remote-as 200
+ address-family ipv4 unicast
+  redistribute kernel
+  label vpn export auto
+  rd vpn export 100:0
+  rt vpn import 100:1
+  rt vpn export 100:2
+  import vpn
+  export vpn

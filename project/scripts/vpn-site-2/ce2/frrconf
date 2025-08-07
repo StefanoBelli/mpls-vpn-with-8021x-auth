@@ -1,0 +1,3 @@
+router bgp 200
+ network 192.168.2.0/24
+ neighbor 10.0.0.10 remote-as 100
