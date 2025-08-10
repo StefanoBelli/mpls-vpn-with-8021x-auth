@@ -7,15 +7,16 @@ ip link set eth1 master bridge0
 ip link set eth2 master bridge0
 ip link set bridge0 up
 
-bridge vlan del vid 1 dev eth0 pvid untagged
-bridge vlan del vid 1 dev eth1 pvid untagged
 bridge vlan del vid 1 dev eth2 pvid untagged
 
 bridge vlan add vid 95 dev eth2
 bridge vlan add vid 32 dev eth2
 bridge vlan add vid 10 dev eth2 pvid untagged
 
+bridge vlan add dev bridge0 vid 95 self
+bridge vlan add dev bridge0 vid 32 self
 bridge vlan add dev bridge0 vid 10 self
+
 ip link add auth.bridge0.10 link bridge0 type vlan id 10
 ip addr add 192.168.2.2/24 dev auth.bridge0.10
 

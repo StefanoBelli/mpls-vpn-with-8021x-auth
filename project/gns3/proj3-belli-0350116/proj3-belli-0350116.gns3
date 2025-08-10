@@ -27,15 +27,6 @@
                 "z": -1
             },
             {
-                "drawing_id": "49f7d061-adfa-4cbe-b3e0-4fc6292fc2fa",
-                "locked": false,
-                "rotation": 0,
-                "svg": "<svg width=\"274\" height=\"303\"><rect width=\"274\" height=\"303\" fill=\"#ffff7f\" fill-opacity=\"1.0\" stroke-width=\"2\" stroke=\"#000000\" /></svg>",
-                "x": 480,
-                "y": -204,
-                "z": -1
-            },
-            {
                 "drawing_id": "84eb1300-3cfa-48cc-bee6-92fae247d22e",
                 "locked": false,
                 "rotation": 0,
@@ -76,8 +67,8 @@
                 "locked": false,
                 "rotation": 0,
                 "svg": "<svg width=\"130\" height=\"24\"><text font-family=\"TypeWriter\" font-size=\"10.0\" font-weight=\"bold\" fill=\"#000000\" fill-opacity=\"1.0\">vpn-site-2 (spoke)</text></svg>",
-                "x": 524,
-                "y": -231,
+                "x": 577,
+                "y": -293,
                 "z": 2
             },
             {
@@ -94,8 +85,8 @@
                 "locked": false,
                 "rotation": 0,
                 "svg": "<svg width=\"20\" height=\"24\"><text font-family=\"TypeWriter\" font-size=\"10.0\" font-weight=\"bold\" fill=\"#000000\" fill-opacity=\"1.0\">.2</text></svg>",
-                "x": -513,
-                "y": 6,
+                "x": -534,
+                "y": 7,
                 "z": 2
             },
             {
@@ -229,8 +220,8 @@
                 "locked": false,
                 "rotation": 0,
                 "svg": "<svg width=\"20\" height=\"24\"><text font-family=\"TypeWriter\" font-size=\"10.0\" font-weight=\"bold\" fill=\"#000000\" fill-opacity=\"1.0\">.1</text></svg>",
-                "x": 459,
-                "y": -149,
+                "x": 458,
+                "y": -212,
                 "z": 2
             },
             {
@@ -238,8 +229,8 @@
                 "locked": false,
                 "rotation": 0,
                 "svg": "<svg width=\"20\" height=\"24\"><text font-family=\"TypeWriter\" font-size=\"10.0\" font-weight=\"bold\" fill=\"#000000\" fill-opacity=\"1.0\">.2</text></svg>",
-                "x": 301,
-                "y": -194,
+                "x": 307,
+                "y": -169,
                 "z": 2
             },
             {
@@ -247,8 +238,8 @@
                 "locked": false,
                 "rotation": 0,
                 "svg": "<svg width=\"84\" height=\"24\"><text font-family=\"TypeWriter\" font-size=\"10.0\" font-weight=\"bold\" fill=\"#000000\" fill-opacity=\"1.0\">10.0.0.8/30</text></svg>",
-                "x": 341,
-                "y": -181,
+                "x": 346,
+                "y": -215,
                 "z": 2
             },
             {
@@ -310,8 +301,8 @@
                 "locked": false,
                 "rotation": 0,
                 "svg": "<svg width=\"108\" height=\"24\"><text font-family=\"TypeWriter\" font-size=\"10.0\" font-weight=\"bold\" fill=\"#000000\" fill-opacity=\"1.0\">192.168.2.0/24</text></svg>",
-                "x": 483,
-                "y": -199,
+                "x": 482,
+                "y": -260,
                 "z": 2
             },
             {
@@ -319,8 +310,8 @@
                 "locked": false,
                 "rotation": 0,
                 "svg": "<svg width=\"20\" height=\"24\"><text font-family=\"TypeWriter\" font-size=\"10.0\" font-weight=\"bold\" fill=\"#000000\" fill-opacity=\"1.0\">.1</text></svg>",
-                "x": 560,
-                "y": -145,
+                "x": 568,
+                "y": -176,
                 "z": 2
             },
             {
@@ -360,12 +351,102 @@
                 "z": 2
             },
             {
-                "drawing_id": "9c748e0d-4aaa-4ee5-bc35-9c8e3d8d7d78",
+                "drawing_id": "24e35281-4fa1-460c-a21f-e00dc9d31ef6",
+                "locked": false,
+                "rotation": 0,
+                "svg": "<svg width=\"144\" height=\"129\"><rect width=\"144\" height=\"129\" fill=\"#55aaff\" fill-opacity=\"1.0\" stroke-width=\"2\" stroke=\"#000000\" /></svg>",
+                "x": 498,
+                "y": -66,
+                "z": 0
+            },
+            {
+                "drawing_id": "c3f5140c-1d7a-48fe-800d-58aac6f3f356",
+                "locked": false,
+                "rotation": 0,
+                "svg": "<svg width=\"151\" height=\"134\"><rect width=\"151\" height=\"134\" fill=\"#aaaaff\" fill-opacity=\"1.0\" stroke-width=\"2\" stroke=\"#000000\" /></svg>",
+                "x": 652,
+                "y": -50,
+                "z": 0
+            },
+            {
+                "drawing_id": "d2fa42fe-d2d2-411c-967e-5331bed9f589",
+                "locked": false,
+                "rotation": 0,
+                "svg": "<svg width=\"328\" height=\"356\"><rect width=\"328\" height=\"356\" fill=\"#ffff7f\" fill-opacity=\"1.0\" stroke-width=\"2\" stroke=\"#000000\" /></svg>",
+                "x": 479,
+                "y": -261,
+                "z": -1
+            },
+            {
+                "drawing_id": "1e200b87-7a83-4fa3-9cc8-1100773ac9b3",
+                "locked": false,
+                "rotation": 0,
+                "svg": "<svg width=\"93\" height=\"34\"><text font-family=\"MS Shell Dlg 2\" font-size=\"8.0\" font-weight=\"bold\" fill=\"#ffff00\" fill-opacity=\"1.0\">VLAN 95\n192.168.2.4/30</text></svg>",
+                "x": 498,
+                "y": -61,
+                "z": 2
+            },
+            {
+                "drawing_id": "312ff51d-2480-4723-90ad-b56d49cf0220",
+                "locked": false,
+                "rotation": 0,
+                "svg": "<svg width=\"93\" height=\"34\"><text font-family=\"MS Shell Dlg 2\" font-size=\"8.0\" font-weight=\"bold\" fill=\"#ffff00\" fill-opacity=\"1.0\">VLAN 32\n192.168.2.8/30</text></svg>",
+                "x": 652,
+                "y": -49,
+                "z": 2
+            },
+            {
+                "drawing_id": "af80aa40-a102-4fe3-b099-da62db20a80a",
+                "locked": false,
+                "rotation": 0,
+                "svg": "<svg width=\"20\" height=\"22\"><text font-family=\"MS Shell Dlg 2\" font-size=\"9.0\" font-weight=\"bold\" fill=\"#ffff00\" fill-opacity=\"1.0\">.2</text></svg>",
+                "x": 606,
+                "y": -15,
+                "z": 2
+            },
+            {
+                "drawing_id": "b5d36479-d08b-42d2-b204-5af4f4177163",
+                "locked": false,
+                "rotation": 0,
+                "svg": "<svg width=\"20\" height=\"22\"><text font-family=\"MS Shell Dlg 2\" font-size=\"9.0\" font-weight=\"bold\" fill=\"#ffff00\" fill-opacity=\"1.0\">.2</text></svg>",
+                "x": 765,
+                "y": -18,
+                "z": 2
+            },
+            {
+                "drawing_id": "e1a72894-0df5-478a-aabb-dd094dd44cdb",
+                "locked": false,
+                "rotation": 0,
+                "svg": "<svg width=\"130\" height=\"19\"><text font-family=\"MS Shell Dlg 2\" font-size=\"7.0\" font-weight=\"bold\" fill=\"#ff007f\" fill-opacity=\"1.0\">Trunk link (VIDs 95,32)</text></svg>",
+                "x": 565,
+                "y": -217,
+                "z": 2
+            },
+            {
+                "drawing_id": "cb862e42-0e92-4511-b760-3de56ffdf9fb",
                 "locked": false,
                 "rotation": 0,
                 "svg": "<svg width=\"20\" height=\"24\"><text font-family=\"TypeWriter\" font-size=\"10.0\" font-weight=\"bold\" fill=\"#000000\" fill-opacity=\"1.0\">.2</text></svg>",
-                "x": 620,
-                "y": -158,
+                "x": 655,
+                "y": -243,
+                "z": 2
+            },
+            {
+                "drawing_id": "4745d13a-94df-4f39-9681-472ef867dd42",
+                "locked": false,
+                "rotation": 0,
+                "svg": "<svg width=\"94\" height=\"47\"><text font-family=\"MS Shell Dlg 2\" font-size=\"8.0\" font-weight=\"bold\" fill=\"#ff007f\" fill-opacity=\"1.0\">GATEWAY for \nVIDs 95,32 \n(.1 both VLANs)</text></svg>",
+                "x": 489,
+                "y": -151,
+                "z": 2
+            },
+            {
+                "drawing_id": "83670506-fefb-4684-95d9-75ac778f4109",
+                "locked": false,
+                "rotation": 0,
+                "svg": "<svg width=\"79\" height=\"19\"><text font-family=\"MS Shell Dlg 2\" font-size=\"7.0\" fill=\"#ff0000\" fill-opacity=\"1.0\">(for 802.1x auth.)</text></svg>",
+                "x": 670,
+                "y": -240,
                 "z": 2
             }
         ],
@@ -381,8 +462,8 @@
                             "rotation": 0,
                             "style": "font-family: TypeWriter;font-size: 10.0;font-weight: bold;fill: #000000;fill-opacity: 1.0;",
                             "text": "eth0",
-                            "x": 57,
-                            "y": -22
+                            "x": 62,
+                            "y": -20
                         },
                         "node_id": "9200123b-f4a0-4924-a459-8f224eb2cb6b",
                         "port_number": 0
@@ -573,8 +654,8 @@
                             "rotation": 0,
                             "style": "font-family: TypeWriter;font-size: 10.0;font-weight: bold;fill: #000000;fill-opacity: 1.0;",
                             "text": "eth1",
-                            "x": 70,
-                            "y": 7
+                            "x": 75,
+                            "y": 34
                         },
                         "node_id": "dca9218d-17fc-4ddf-8e01-a568cb9b8817",
                         "port_number": 0
@@ -585,8 +666,8 @@
                             "rotation": 0,
                             "style": "font-family: TypeWriter;font-size: 10.0;font-weight: bold;fill: #000000;fill-opacity: 1.0;",
                             "text": "eth0",
-                            "x": -42,
-                            "y": -30
+                            "x": -50,
+                            "y": -12
                         },
                         "node_id": "97684870-9430-4012-b43c-c3b554fa84f6",
                         "port_number": 0
@@ -637,8 +718,8 @@
                             "rotation": 0,
                             "style": "font-family: TypeWriter;font-size: 10.0;font-weight: bold;fill: #000000;fill-opacity: 1.0;",
                             "text": "eth1",
-                            "x": 66,
-                            "y": -21
+                            "x": 74,
+                            "y": 26
                         },
                         "node_id": "97684870-9430-4012-b43c-c3b554fa84f6",
                         "port_number": 0
@@ -649,8 +730,8 @@
                             "rotation": 0,
                             "style": "font-family: TypeWriter;font-size: 10.0;font-weight: bold;fill: #000000;fill-opacity: 1.0;",
                             "text": "eth2",
-                            "x": -50,
-                            "y": -1
+                            "x": -73,
+                            "y": -32
                         },
                         "node_id": "2f08a51d-0b15-4e46-95df-ab94ed5f05d1",
                         "port_number": 0
@@ -660,39 +741,7 @@
             },
             {
                 "filters": {},
-                "link_id": "7f7e390c-d49c-4a61-a517-5ae4403afb28",
-                "link_style": {},
-                "nodes": [
-                    {
-                        "adapter_number": 0,
-                        "label": {
-                            "rotation": 0,
-                            "style": "font-family: TypeWriter;font-size: 10.0;font-weight: bold;fill: #000000;fill-opacity: 1.0;",
-                            "text": "eth0",
-                            "x": -11,
-                            "y": 70
-                        },
-                        "node_id": "2f08a51d-0b15-4e46-95df-ab94ed5f05d1",
-                        "port_number": 0
-                    },
-                    {
-                        "adapter_number": 0,
-                        "label": {
-                            "rotation": 0,
-                            "style": "font-family: TypeWriter;font-size: 10.0;font-weight: bold;fill: #000000;fill-opacity: 1.0;",
-                            "text": "eth0",
-                            "x": 65,
-                            "y": -17
-                        },
-                        "node_id": "0122a302-d992-4075-bee2-bc36609acd21",
-                        "port_number": 0
-                    }
-                ],
-                "suspend": false
-            },
-            {
-                "filters": {},
-                "link_id": "717af2de-438d-47a7-8695-fa9a9db88d4f",
+                "link_id": "43943744-e807-4be9-9859-36357ff31eb7",
                 "link_style": {},
                 "nodes": [
                     {
@@ -701,8 +750,8 @@
                             "rotation": 0,
                             "style": "font-family: TypeWriter;font-size: 10.0;font-weight: bold;fill: #000000;fill-opacity: 1.0;",
                             "text": "eth1",
-                            "x": 44,
-                            "y": 55
+                            "x": 33,
+                            "y": 68
                         },
                         "node_id": "2f08a51d-0b15-4e46-95df-ab94ed5f05d1",
                         "port_number": 0
@@ -713,10 +762,42 @@
                             "rotation": 0,
                             "style": "font-family: TypeWriter;font-size: 10.0;font-weight: bold;fill: #000000;fill-opacity: 1.0;",
                             "text": "eth0",
-                            "x": 34,
-                            "y": -42
+                            "x": 40,
+                            "y": -33
                         },
                         "node_id": "78c1cce6-39c7-44b0-89ce-dce0293adf38",
+                        "port_number": 0
+                    }
+                ],
+                "suspend": false
+            },
+            {
+                "filters": {},
+                "link_id": "49bef408-4ebe-4b80-af1a-508f45f28bc4",
+                "link_style": {},
+                "nodes": [
+                    {
+                        "adapter_number": 0,
+                        "label": {
+                            "rotation": 0,
+                            "style": "font-family: TypeWriter;font-size: 10.0;font-weight: bold;fill: #000000;fill-opacity: 1.0;",
+                            "text": "eth0",
+                            "x": 71,
+                            "y": -6
+                        },
+                        "node_id": "0122a302-d992-4075-bee2-bc36609acd21",
+                        "port_number": 0
+                    },
+                    {
+                        "adapter_number": 0,
+                        "label": {
+                            "rotation": 0,
+                            "style": "font-family: TypeWriter;font-size: 10.0;font-weight: bold;fill: #000000;fill-opacity: 1.0;",
+                            "text": "eth0",
+                            "x": -19,
+                            "y": 68
+                        },
+                        "node_id": "2f08a51d-0b15-4e46-95df-ab94ed5f05d1",
                         "port_number": 0
                     }
                 ],
@@ -751,7 +832,7 @@
                     "console_http_path": "/",
                     "console_http_port": 80,
                     "console_resolution": "1024x768",
-                    "container_id": "65cbacca811141678dd64add5c496458b20f15497fe5d13eba17e671b86f038b",
+                    "container_id": "4a95ec7a0802481a4aaf70340dd041e58ae561371a95ef4ffc4a633edec2f75c",
                     "environment": "",
                     "extra_hosts": "",
                     "extra_volumes": [
@@ -765,8 +846,8 @@
                 "symbol": ":/symbols/affinity/circle/green/client.svg",
                 "template_id": "dabc066f-bcde-44f4-ba70-1d934aa8dee5",
                 "width": 60,
-                "x": -571,
-                "y": 11,
+                "x": -596,
+                "y": 8,
                 "z": 1
             },
             {
@@ -796,7 +877,7 @@
                     "console_http_path": "/",
                     "console_http_port": 80,
                     "console_resolution": "1024x768",
-                    "container_id": "5f6a0f44d5d9334571a1e6002e47507e8dda0c7172aa3a9cddfb38011be2472c",
+                    "container_id": "b62cfde511ecc5315a5372eaa7e2c166ffa01a053fd6b88b32a39ca0cb4a3e28",
                     "environment": "",
                     "extra_hosts": "",
                     "extra_volumes": [
@@ -842,7 +923,7 @@
                     "console_http_path": "/",
                     "console_http_port": 80,
                     "console_resolution": "1024x768",
-                    "container_id": "6a391c51f0b030a34d2665cf48371b4227b251f354525b49daecf3861ad381c7",
+                    "container_id": "5e800bbbdca2d9b8caa899a08c189bbfd9f630e280be64290798524b6ba1359d",
                     "environment": "",
                     "extra_hosts": "",
                     "extra_volumes": [
@@ -887,7 +968,7 @@
                     "console_http_path": "/",
                     "console_http_port": 80,
                     "console_resolution": "1024x768",
-                    "container_id": "7764a2cff47d0c26ddbcd114ba8941378e724930d98829c7c8158805a23b1a87",
+                    "container_id": "f81fb0f91c72041c3fa3c8ddaa68fcf723abcc30c50276ec32b0193fda11d98f",
                     "environment": "",
                     "extra_hosts": "",
                     "extra_volumes": [
@@ -933,7 +1014,7 @@
                     "console_http_path": "/",
                     "console_http_port": 80,
                     "console_resolution": "1024x768",
-                    "container_id": "edc73881f40bf88e87b2a76257027739e1d1d5cc4af30bdb7dd5f8c20f4b8c88",
+                    "container_id": "97abd0659917723363e53af4d4c6a5e8f9a7ca330457a58638f5e454ef24584e",
                     "environment": "",
                     "extra_hosts": "",
                     "extra_volumes": [
@@ -947,8 +1028,8 @@
                 "symbol": ":/symbols/affinity/circle/green/client.svg",
                 "template_id": "dabc066f-bcde-44f4-ba70-1d934aa8dee5",
                 "width": 60,
-                "x": 502,
-                "y": 2,
+                "x": 530,
+                "y": -27,
                 "z": 1
             },
             {
@@ -978,7 +1059,7 @@
                     "console_http_path": "/",
                     "console_http_port": 80,
                     "console_resolution": "1024x768",
-                    "container_id": "3af17af80289e28c6cf081359a6afa5db8f3a969939abf28c4cc9207755884e0",
+                    "container_id": "e9857229193841254f84489af157b7ed00073234b1111d8bb1b5309a7a3abdae",
                     "environment": "",
                     "extra_hosts": "",
                     "extra_volumes": [
@@ -992,8 +1073,8 @@
                 "symbol": ":/symbols/affinity/circle/green/client.svg",
                 "template_id": "dabc066f-bcde-44f4-ba70-1d934aa8dee5",
                 "width": 60,
-                "x": 668,
-                "y": 10,
+                "x": 724,
+                "y": -3,
                 "z": 1
             },
             {
@@ -1008,8 +1089,8 @@
                     "rotation": 0,
                     "style": "font-family: TypeWriter;font-size: 10.0;font-weight: bold;fill: #000000;fill-opacity: 1.0;",
                     "text": "switch",
-                    "x": 44,
-                    "y": -21
+                    "x": 18,
+                    "y": -26
                 },
                 "locked": false,
                 "name": "switch",
@@ -1023,7 +1104,7 @@
                     "console_http_path": "/",
                     "console_http_port": 80,
                     "console_resolution": "1024x768",
-                    "container_id": "cd0acec349f8e6a027c6a20f2f48454a96c0b32a44bba32c8a26829df1296878",
+                    "container_id": "d623e95af15385c8cf108a9a64773413ee0b34c0d87ed839f5ac8da051017a99",
                     "environment": "",
                     "extra_hosts": "",
                     "extra_volumes": [
@@ -1037,8 +1118,8 @@
                 "symbol": ":/symbols/affinity/circle/gray/switch.svg",
                 "template_id": "093e9c38-2b0c-48e4-a0c8-7d339051b435",
                 "width": 60,
-                "x": 651,
-                "y": -171,
+                "x": 731,
+                "y": -229,
                 "z": 1
             },
             {
@@ -1068,7 +1149,7 @@
                     "console_http_path": "/",
                     "console_http_port": 80,
                     "console_resolution": "1024x768",
-                    "container_id": "ba6b71357f00150b795a9052b95690ebf62a995136953a392c682407cc98c0c5",
+                    "container_id": "80fc5dd7222e46021cc26488b92c3203372ce9bf64642f42227c2b2ac7798ad1",
                     "environment": "",
                     "extra_hosts": "",
                     "extra_volumes": [
@@ -1083,8 +1164,8 @@
                 "symbol": ":/symbols/affinity/circle/blue/router.svg",
                 "template_id": "38e68b8b-3b5c-4dbb-a184-82822f26b65c",
                 "width": 60,
-                "x": 482,
-                "y": -138,
+                "x": 490,
+                "y": -218,
                 "z": 1
             },
             {
@@ -1114,7 +1195,7 @@
                     "console_http_path": "/",
                     "console_http_port": 80,
                     "console_resolution": "1024x768",
-                    "container_id": "d80086181f8ad7a53e5b8cee8f6244f44042c351864fc86e2b59bdd0f1ff73e8",
+                    "container_id": "eb0bf0e81dfb0e00c239b07a07e1c1c57eeca22ec9b8cbd521e042b6ed4fdc76",
                     "environment": "",
                     "extra_hosts": "",
                     "extra_volumes": [
@@ -1160,7 +1241,7 @@
                     "console_http_path": "/",
                     "console_http_port": 80,
                     "console_resolution": "1024x768",
-                    "container_id": "3260b29175aa6a514ed4a006d3bfe974a959cd4027b557e6b5e057fbd51f8234",
+                    "container_id": "a1fbd0451263e3308a023b387a5fc3233cb2d9779cedde7af2a02507faaeacf1",
                     "environment": "",
                     "extra_hosts": "",
                     "extra_volumes": [
@@ -1206,7 +1287,7 @@
                     "console_http_path": "/",
                     "console_http_port": 80,
                     "console_resolution": "1024x768",
-                    "container_id": "be213f71f56fae7533bab31d129f592d12eb4d686b588cec8639e1683ba628cb",
+                    "container_id": "4ce7523e92ace1596799c32fdcf759a080b530c1b29d1c8d6f3dfd9eb1985053",
                     "environment": "",
                     "extra_hosts": "",
                     "extra_volumes": [
@@ -1252,7 +1333,7 @@
                     "console_http_path": "/",
                     "console_http_port": 80,
                     "console_resolution": "1024x768",
-                    "container_id": "a17e6bdf0c76556c418b6e9a3315df7964718312b347eb08aa938640f8375ab3",
+                    "container_id": "88bc833b77646adc5a1b74b52c4116f97a4acdd54a11a5fc2ad6b0a65d8915f6",
                     "environment": "",
                     "extra_hosts": "",
                     "extra_volumes": [
