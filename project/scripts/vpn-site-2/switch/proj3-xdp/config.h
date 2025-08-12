@@ -1,0 +1,9 @@
+#ifndef CONFIG_H
+#define CONFIG_H
+
+#define MAX_CONN_STAS 4
+#define MAX_IDENT_NAME_LEN 256
+#define MAX_IDENTS 2
+#define PENDING_AUTH_DISCARD_NS 60000000000
+
+#endif

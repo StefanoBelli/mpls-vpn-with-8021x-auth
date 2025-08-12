@@ -1,47 +1,11 @@
-// useful docs
-//  * BPF_MAP_TYPE_HASH: https://docs.ebpf.io/linux/map-type/BPF_MAP_TYPE_HASH/
-//  * bpf_map_lookup_elem: https://docs.ebpf.io/linux/helper-function/bpf_map_lookup_elem/
-//  * bpf_for_each_map_elem: https://docs.ebpf.io/linux/helper-function/bpf_for_each_map_elem/
-//  * bpf_map_update_elem: https://docs.ebpf.io/linux/helper-function/bpf_map_update_elem/
-//  * bpf_map_delete_elem: https://docs.ebpf.io/linux/helper-function/bpf_map_delete_elem/
-//  * bpf_ktime_get_boot_ns: https://docs.ebpf.io/linux/helper-function/bpf_ktime_get_boot_ns/
-//  * bpf_htons: https://docs.ebpf.io/ebpf-library/libbpf/ebpf/bpf_htons/
-//  * struct xdp_md: https://elixir.bootlin.com/linux/v6.16/source/include/uapi/linux/bpf.h#L6476
-//  * struct ethhdr: https://elixir.bootlin.com/linux/v6.16/source/include/uapi/linux/if_ether.h#L173
-//  * ETH_P_PAE: https://elixir.bootlin.com/linux/v6.16/source/include/uapi/linux/if_ether.h#L88
-//  * EAP / EAPOL: https://support.huawei.com/enterprise/en/doc/EDOC1100086527
-//  * bpf_printk: https://docs.ebpf.io/ebpf-library/libbpf/ebpf/bpf_printk/
-//  * variable-size memcpy issues: https://stackoverflow.com/questions/73088287/how-do-i-copy-data-to-buffer-in-ebpf
-
 #include <linux/bpf.h>
 #include <bpf/bpf_helpers.h>
 #include <bpf/bpf_endian.h>
 #include <linux/if_ether.h>
-#include "xdp_maps_defs.h"
 
-#define PENDING_AUTH_DISCARD_NS 60000000000
-
-struct eapolhdr {
-    __u8 version;
-    __u8 type;
-    __u16 length;
-};
-
-struct eaphdr {
-    __u8 code;
-    __u8 id;
-    __u16 length;
-};
-
-struct eapdata {
-    __u8 type;
-};
-
-#define EAP_RESPONSE 2
-#define EAP_RESPONSE_TYPE_IDENTITY 1
-#define EAPOL_EAP 0
-#define EAPOL_LOGOFF 2
-#define HAS_EAPOL(frame) ((frame)->h_proto == bpf_htons(ETH_P_PAE))
+#include "config.h"
+#include "maps.h"
+#include "eapol.h"
 
 static long __check_req_issue_time_cb(void *map, const void *key, const void *value, void *ctx) {
     struct pending_auth_sta *psta = (struct pending_auth_sta*) map;
@@ -62,7 +26,7 @@ static int __do_start_auth(__u8* macaddr, __u32 iface, struct eapdata *data, __u
         return XDP_DROP;
     }
 
-    if((void*)data + sizeof(struct eapdata) > data_end) {
+    if(((void*)data) + sizeof(struct eapdata) > data_end) {
         return XDP_DROP;
     }
 
@@ -77,7 +41,9 @@ static int __do_start_auth(__u8* macaddr, __u32 iface, struct eapdata *data, __u
 
     struct pending_auth_sta_key psta_key;
     __builtin_memset(psta_key.identity, 0, MAX_IDENT_NAME_LEN);
-    for(__u32 i = 0; i < MAX_IDENT_NAME_LEN && identity + i + 1 < data_end; i++) {
+
+    //this is a BPF-verifier-approved "memcpy"
+    for(__u32 i = 0; i < MAX_IDENT_NAME_LEN && ((void*) identity) + i + 1 < data_end; i++) {
         psta_key.identity[i] = identity[i];
     }
 
@@ -101,7 +67,7 @@ static int __do_start_auth(__u8* macaddr, __u32 iface, struct eapdata *data, __u
 static int check_if_supplicant_logoff(struct ethhdr* frame, struct authd_sta_val *sta, void *data_end) {
     if(HAS_EAPOL(frame)) {
         struct eapolhdr *eapol = (struct eapolhdr*) (frame + sizeof(struct ethhdr));
-        if(eapol + sizeof(struct eapolhdr) > data_end) {
+        if(((void*)eapol) + sizeof(struct eapolhdr) > data_end) {
             return XDP_DROP;
         }
 
@@ -116,13 +82,13 @@ static int check_if_supplicant_logoff(struct ethhdr* frame, struct authd_sta_val
 static int attempt_start_auth(__u32 iface, struct ethhdr* frame, void* data_end) {
     if(HAS_EAPOL(frame)) {
         struct eapolhdr *eapol = (struct eapolhdr*) (frame + sizeof(struct ethhdr));
-        if(eapol + sizeof(struct eapolhdr) > data_end) {
+        if(((void*)eapol) + sizeof(struct eapolhdr) > data_end) {
             return XDP_DROP;
         }
 
         if(eapol->type == EAPOL_EAP) {
             struct eaphdr *eap = (struct eaphdr*) (eapol + sizeof(struct eapolhdr));
-            if(eap + sizeof(struct eaphdr) > data_end) {
+            if(((void*)eap) + sizeof(struct eaphdr) > data_end) {
                 return XDP_DROP;
             }
 
@@ -143,7 +109,7 @@ int inspect_eapol_frame(struct xdp_md* ctx) {
     void *data = (void*)((__u64) ctx->data);
 
     struct ethhdr *eth = data;
-    if(data + sizeof(struct ethhdr) > data_end) {
+    if(((void*)eth) + sizeof(struct ethhdr) > data_end) {
         return XDP_DROP;
     }
 

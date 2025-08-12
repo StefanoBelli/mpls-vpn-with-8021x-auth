@@ -1,9 +1,9 @@
-#ifndef XDP_MAPS_DEFS_H
-#define XDP_MAPS_DEFS_H
+#ifndef MAPS_H
+#define MAPS_H
 
-#define MAX_CONN_STAS 4
-#define MAX_IDENT_NAME_LEN 256
-#define MAX_IDENTS 2
+#ifndef CONFIG_H
+#error You must include config.h before maps.h
+#endif
 
 struct pending_auth_sta_key {
     __u8 identity[MAX_IDENT_NAME_LEN];
