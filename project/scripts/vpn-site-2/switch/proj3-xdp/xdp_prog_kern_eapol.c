@@ -31,13 +31,13 @@ static int __do_start_auth(__u8* macaddr, __u32 iface, struct eapdata *data, __u
     }
 
     if(data->type != EAP_RESPONSE_TYPE_IDENTITY) {
-        return XDP_DROP;
+        return XDP_PASS;
     }
 
     __u64 now = bpf_ktime_get_boot_ns();
     bpf_for_each_map_elem(&pending_auth_sta, __check_req_issue_time_cb, &now, 0);
 
-    __u8 *identity = (__u8*)(data + sizeof(struct eapdata));
+    __u8 *identity = (__u8*)(((void*)data) + sizeof(struct eapdata));
 
     struct pending_auth_sta_key psta_key;
     __builtin_memset(psta_key.identity, 0, MAX_IDENT_NAME_LEN);
@@ -66,7 +66,7 @@ static int __do_start_auth(__u8* macaddr, __u32 iface, struct eapdata *data, __u
 
 static int check_if_supplicant_logoff(struct ethhdr* frame, struct authd_sta_val *sta, void *data_end) {
     if(HAS_EAPOL(frame)) {
-        struct eapolhdr *eapol = (struct eapolhdr*) (frame + sizeof(struct ethhdr));
+        struct eapolhdr *eapol = (struct eapolhdr*) (((void*)frame) + sizeof(struct ethhdr));
         if(((void*)eapol) + sizeof(struct eapolhdr) > data_end) {
             return XDP_DROP;
         }
@@ -81,19 +81,19 @@ static int check_if_supplicant_logoff(struct ethhdr* frame, struct authd_sta_val
 
 static int attempt_start_auth(__u32 iface, struct ethhdr* frame, void* data_end) {
     if(HAS_EAPOL(frame)) {
-        struct eapolhdr *eapol = (struct eapolhdr*) (frame + sizeof(struct ethhdr));
+        struct eapolhdr *eapol = (struct eapolhdr*) (((void*)frame) + sizeof(struct ethhdr));
         if(((void*)eapol) + sizeof(struct eapolhdr) > data_end) {
             return XDP_DROP;
         }
 
         if(eapol->type == EAPOL_EAP) {
-            struct eaphdr *eap = (struct eaphdr*) (eapol + sizeof(struct eapolhdr));
+            struct eaphdr *eap = (struct eaphdr*) (((void*)eapol) + sizeof(struct eapolhdr));
             if(((void*)eap) + sizeof(struct eaphdr) > data_end) {
                 return XDP_DROP;
             }
 
             if(eap->code == EAP_RESPONSE) {
-                struct eapdata *eapdata = (struct eapdata*) (eap + sizeof(struct eaphdr));
+                struct eapdata *eapdata = (struct eapdata*) (((void*)eap) + sizeof(struct eaphdr));
                 __u16 tdlen = bpf_ntohs(eap->length) - sizeof(struct eapdata) - sizeof(struct eaphdr);
                 return __do_start_auth(frame->h_source, iface, eapdata, tdlen, data_end);
             }
