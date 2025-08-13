@@ -94,7 +94,7 @@ static int attempt_start_auth(__u32 iface, struct ethhdr* frame, void* data_end)
 
             if(eap->code == EAP_RESPONSE) {
                 struct eapdata *eapdata = (struct eapdata*) (eap + sizeof(struct eaphdr));
-                __u16 tdlen = eap->length - sizeof(struct eapdata) - sizeof(struct eaphdr);
+                __u16 tdlen = bpf_ntohs(eap->length) - sizeof(struct eapdata) - sizeof(struct eaphdr);
                 return __do_start_auth(frame->h_source, iface, eapdata, tdlen, data_end);
             }
         }
