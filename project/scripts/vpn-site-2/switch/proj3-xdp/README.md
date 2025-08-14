@@ -9,6 +9,7 @@ useful docs for eBPF/XDP things...
 * `bpf_map_delete_elem`: https://docs.ebpf.io/linux/helper-function/bpf\_map\_delete\_elem/
 * `bpf_ktime_get_boot_ns`: https://docs.ebpf.io/linux/helper-function/bpf\_ktime\_get\_boot\_ns/
 * `bpf_htons`: https://docs.ebpf.io/ebpf-library/libbpf/ebpf/bpf\_htons/
+* `bpf_ntohs`: https://docs.ebpf.io/ebpf-library/libbpf/ebpf/bpf\_ntohs/
 * `struct xdp_md`: https://elixir.bootlin.com/linux/v6.16/source/include/uapi/linux/bpf.h#L6476
 * `struct ethhdr`: https://elixir.bootlin.com/linux/v6.16/source/include/uapi/linux/if\_ether.h#L173
 * `ETH_P_PAE`: https://elixir.bootlin.com/linux/v6.16/source/include/uapi/linux/if\_ether.h#L88

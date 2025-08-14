@@ -1,7 +1,8 @@
 #include <linux/bpf.h>
+#include <linux/if_ether.h>
+
 #include <bpf/bpf_helpers.h>
 #include <bpf/bpf_endian.h>
-#include <linux/if_ether.h>
 
 #include "config.h"
 #include "maps.h"
@@ -14,7 +15,7 @@ static long __check_req_issue_time_cb(void *map, const void *key, const void *va
 
     __u64 now_time = *((__u64*) ctx);
 
-    if(now_time - psta_val->req_issue_time >= PENDING_AUTH_DISCARD_NS) {
+    if(now_time - psta_val->req_issue_time >= CONFIG_PENDING_AUTH_DISCARD_NS) {
         bpf_map_delete_elem(psta, psta_key);
     }
 
@@ -22,7 +23,7 @@ static long __check_req_issue_time_cb(void *map, const void *key, const void *va
 }
 
 static int __do_start_auth(__u8* macaddr, __u32 iface, struct eapdata *data, __u16 typedatalen, void* data_end) {
-    if(typedatalen > MAX_IDENT_NAME_LEN) {
+    if(typedatalen > CONFIG_MAX_IDENT_NAME_LEN) {
         return XDP_DROP;
     }
 
@@ -40,10 +41,10 @@ static int __do_start_auth(__u8* macaddr, __u32 iface, struct eapdata *data, __u
     __u8 *identity = (__u8*)(((void*)data) + sizeof(struct eapdata));
 
     struct pending_auth_sta_key psta_key;
-    __builtin_memset(psta_key.identity, 0, MAX_IDENT_NAME_LEN);
+    __builtin_memset(psta_key.identity, 0, CONFIG_MAX_IDENT_NAME_LEN);
 
     //this is a BPF-verifier-approved "memcpy"
-    for(__u32 i = 0; i < MAX_IDENT_NAME_LEN && ((void*) identity) + i + 1 < data_end; i++) {
+    for(__u32 i = 0; i < CONFIG_MAX_IDENT_NAME_LEN && ((void*) identity) + i + 1 < data_end; i++) {
         psta_key.identity[i] = identity[i];
     }
 
