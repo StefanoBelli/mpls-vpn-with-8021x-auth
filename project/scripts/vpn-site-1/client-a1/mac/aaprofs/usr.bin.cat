@@ -1,0 +1,16 @@
+#include <tunables/global>
+
+/usr/bin/cat {
+	#include <abstractions/base>
+	
+	/** r,
+	
+	deny /etc/passwd rwxlk,
+	deny /etc/group rwxlk,
+	deny /etc/shadow rwxlk,
+	deny /etc/gshadow rwxlk,
+	deny /etc/login.defs rwxlk,
+	deny /var/log/lastlog rwxlk,
+
+	/usr/bin/cat mr,
+}

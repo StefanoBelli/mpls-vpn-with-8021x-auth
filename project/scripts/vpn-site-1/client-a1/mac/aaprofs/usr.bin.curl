@@ -1,0 +1,14 @@
+#include <tunables/global>
+
+/usr/bin/curl {
+	#include <abstractions/base>
+	#include <abstractions/nameservice>
+	#include <abstractions/openssl>
+	
+	/usr/bin/curl mr,
+
+	network inet stream,
+	network inet6 stream,
+	
+	/tmp/* rw,
+}

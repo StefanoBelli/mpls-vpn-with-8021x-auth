@@ -1,0 +1,24 @@
+#include <tunables/global>
+
+/usr/bin/rm {
+	#include <abstractions/base>
+
+	/** rw,
+
+	deny /boot/** w,
+	deny /bin/** w,
+	deny /usr/bin/** w,
+	deny /usr/lib/** w,
+	deny /usr/lib64/** w,
+	deny /usr/include/** w,
+	deny /usr/libexec/** w,
+	deny /usr/share/** w,
+	deny /usr/sbin/** w,
+	deny /lib/** w,
+	deny /lib64/** w,
+	deny /etc/** w,
+	deny /var/** w,
+	deny /sbin/** w,
+
+	/usr/bin/rm mr,
+}
