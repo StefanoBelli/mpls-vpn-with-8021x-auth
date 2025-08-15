@@ -11,30 +11,32 @@
 #include "maps.h"
 #include "radius.h"
 
-int get_username_from_avps(struct radiusavphdr *avps, __u16 avpslen, void* data_end, __u8 *out, __u16 *outlen) {
-    *outlen = 0;
+struct avps_parsing_output {
+    __u8 username[CONFIG_MAX_IDENT_NAME_LEN];
+    __u16 usernamelen;
+    __u16 vlan_id;
+};
 
-    for(__u32 i = 0; i < avpslen && ((void*)avps) + sizeof(struct radiusavphdr) <= data_end; i += avps->length) {
+int get_username_and_vlan_from_avps(struct radiusavphdr *avps, __u16 avpslen, void* data_end, struct avps_parsing_output *out) {
+    out->usernamelen = 0;
+    out->vlan_id = 0;
+
+    for(int i = 0; i < CONFIG_RADIUS_MAX_AVPS; i++) {
+        if(((void*)avps) + sizeof(struct radiusavphdr) > data_end) {
+            return XDP_DROP;
+        }
 
         if(avps->type == RADIUS_AVP_TYPE_USER_NAME) {
-            __u32 identlen = avps->length - sizeof(struct radiusavphdr);
-            __u8 *avp_data = ((void*)avps) + sizeof(struct radiusavphdr);
 
-            if(identlen > CONFIG_MAX_IDENT_NAME_LEN) {
-                return XDP_DROP;
-            }
+        } else if(avps->type == RADIUS_AVP_TYPE_TUNNEL_MEDIUM_TYPE) {
 
-            if(((void*)avp_data) + CONFIG_MAX_IDENT_NAME_LEN > data_end) {
-                return XDP_DROP;
-            }
+        } else if(avps->type == RADIUS_AVP_TYPE_TUNNEL_TYPE) {
 
-            for(__u32 j = 0; j < identlen; j++) {
-                out[j] = avp_data[j];
-            }
+        } else if(avps->type == RADIUS_AVP_TYPE_TUNNEL_PRIVATE_GROUP_ID) {
 
-            *outlen = identlen;
-            return XDP_PASS;
         }
+
+        avps = ((void*)avps) + avps->length;
     }
 
     return XDP_PASS;
@@ -86,14 +88,14 @@ int inspect_radius_frame(struct xdp_md* ctx) {
     }
 
     if(radius->code == RADIUS_CODE_ACCESS_ACCEPT) {
-        __u8 username[CONFIG_MAX_IDENT_NAME_LEN];
-        __u16 usernamelen;
+        struct avps_parsing_output out;
+        __builtin_memset(&out, 0, sizeof(struct avps_parsing_output));
+
         struct radiusavphdr* avps = (struct radiusavphdr*)((void*)radius) + sizeof(struct radiushdr);
         __u16 avpstotlen = radius->length - sizeof(struct radiushdr);
 
-        __builtin_memset(username, 0, CONFIG_MAX_IDENT_NAME_LEN);
-        rv = get_username_from_avps(avps, avpstotlen, data_end, username, &usernamelen);
-        if(usernamelen == 0) {
+        rv = get_username_and_vlan_from_avps(avps, avpstotlen, data_end, &out);
+        if(out.usernamelen == 0) {
             return rv;
         }
     }
