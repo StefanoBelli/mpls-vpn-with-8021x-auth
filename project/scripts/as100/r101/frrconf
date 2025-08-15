@@ -37,7 +37,7 @@ router bgp 100
   neighbor 1.255.0.3 next-hop-self
 
 router bgp 100 vrf vpnA
- neighbor 10.0.0.1 remote-as 200
+ neighbor 10.0.0.1 remote-as 65000
  address-family ipv4 unicast
   label vpn export auto
   rd vpn export 100:0

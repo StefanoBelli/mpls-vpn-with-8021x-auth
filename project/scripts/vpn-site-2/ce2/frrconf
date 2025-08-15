@@ -6,6 +6,6 @@ interface eth1
 
 ip route 0.0.0.0/0 10.0.0.10
 
-router bgp 200
+router bgp 65002
  network 192.168.2.0/24
  neighbor 10.0.0.10 remote-as 100
