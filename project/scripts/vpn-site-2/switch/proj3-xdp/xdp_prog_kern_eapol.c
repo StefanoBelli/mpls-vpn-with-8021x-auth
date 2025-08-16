@@ -127,6 +127,11 @@ int inspect_eapol_frame(struct xdp_md* ctx) {
         }
 
         sta->current_iface = ctx->ingress_ifindex;
+
+        if(sta->current_iface != sta_orig_iface) {
+            return XDP_DROP;
+        }
+
         sta->last_seen = bpf_ktime_get_boot_ns();
 
         return check_if_supplicant_logoff(eth, sta, data_end);
