@@ -16,7 +16,9 @@ static long __check_req_issue_time_cb(void *map, const void *key, const void *va
     __u64 now_time = *((__u64*) ctx);
 
     if(now_time - psta_val->req_issue_time >= CONFIG_PENDING_AUTH_DISCARD_NS) {
-        bpf_map_delete_elem(psta, psta_key);
+        if(bpf_map_delete_elem(psta, psta_key) < 0) {
+            bpf_printk("unable to delete pending request (bpf_map_delete_elem failure)\n");
+        }
     }
 
     return 0;
@@ -58,7 +60,9 @@ static int __do_start_auth(__u8* macaddr, __u32 iface, struct eapdata *data, __u
     __builtin_memcpy(new_psta_val.macaddr, macaddr, sizeof(__u8) * 6);
     new_psta_val.iface = iface;
 
-    bpf_map_update_elem(&pending_auth_sta, identity, &new_psta_val, BPF_ANY);
+    if(bpf_map_update_elem(&pending_auth_sta, identity, &new_psta_val, BPF_ANY) < 0) {
+        return XDP_DROP;
+    }
 
     return XDP_PASS;
 }

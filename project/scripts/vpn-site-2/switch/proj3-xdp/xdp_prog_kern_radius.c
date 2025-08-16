@@ -24,7 +24,7 @@ static int parse_radius_avps(struct radiusavphdr *avps, __u8* username, __u8* vi
             return XDP_DROP;
         }
 
-        if(((void*)avps) + ((__u16) avps->length) > data_end) {
+        if(((void*)avps) + avps->length > data_end) {
             return XDP_DROP;
         }
 
