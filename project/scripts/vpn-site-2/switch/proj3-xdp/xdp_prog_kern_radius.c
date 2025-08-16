@@ -24,7 +24,7 @@ static int parse_radius_avps(struct radiusavphdr *avps, __u8* username, __u8* vi
             return XDP_DROP;
         }
 
-        if(((void*)avps) + avps->length > data_end) {
+        if(((void*)avps) + ((__u16) avps->length) > data_end) {
             return XDP_DROP;
         }
 
@@ -46,7 +46,7 @@ static int parse_radius_avps(struct radiusavphdr *avps, __u8* username, __u8* vi
                 return XDP_DROP;
             }
 
-            if(bpf_probe_read_kernel(username, datalen, data) < 0) {
+            if(bpf_probe_read_kernel(vid, datalen, data) < 0) {
                 return XDP_DROP;
             }
 
@@ -63,15 +63,16 @@ static int parse_radius_avps(struct radiusavphdr *avps, __u8* username, __u8* vi
     return XDP_PASS;
 }
 
-static int finalize_auth(__u8 *identity, __u8 *vid, __u32 current_iface) {
+static int finalize_auth(__u8 *identity, __u8 *vid) {
     struct pending_auth_sta_val *pendauthsta = bpf_map_lookup_elem(&pending_auth_sta, identity);
     if(pendauthsta == NULL) {
-        return XDP_DROP;
+        return XDP_PASS;
     }
 
     struct authd_sta_val authdsta;
+    __builtin_memset(&authdsta, 0, sizeof(struct authd_sta_val));
     authdsta.last_seen = bpf_ktime_get_boot_ns();
-    authdsta.current_iface = current_iface;
+    authdsta.current_iface = pendauthsta->iface;
     authdsta.origin_iface = pendauthsta->iface;
     __builtin_memcpy(authdsta.vlan_id, vid, 5);
     authdsta.user_known = 0;
@@ -137,7 +138,7 @@ int inspect_radius_frame(struct xdp_md* ctx) {
     }
 
     if(radius->code == RADIUS_CODE_ACCESS_ACCEPT) {
-        struct radiusavphdr *avps = (struct radiusavphdr*) ((void*)radius) + sizeof(struct radiushdr);
+        struct radiusavphdr *avps = (struct radiusavphdr*) (((void*)radius) + sizeof(struct radiushdr));
 
         __u8 username[CONFIG_MAX_IDENT_NAME_LEN];
         __u8 vid[5];
@@ -150,7 +151,7 @@ int inspect_radius_frame(struct xdp_md* ctx) {
             return rv;
         }
 
-        return finalize_auth(username, vid, ctx->ingress_ifindex);
+        return finalize_auth(username, vid);
     }
 
     return XDP_PASS;

@@ -381,16 +381,16 @@
                 "drawing_id": "1e200b87-7a83-4fa3-9cc8-1100773ac9b3",
                 "locked": false,
                 "rotation": 0,
-                "svg": "<svg width=\"93\" height=\"34\"><text font-family=\"MS Shell Dlg 2\" font-size=\"8.0\" font-weight=\"bold\" fill=\"#ffff00\" fill-opacity=\"1.0\">VLAN 95\n192.168.2.4/30</text></svg>",
-                "x": 498,
-                "y": -61,
+                "svg": "<svg width=\"93\" height=\"34\"><text font-family=\"MS Shell Dlg 2\" font-size=\"8.0\" font-weight=\"bold\" fill=\"#ffff00\" fill-opacity=\"1.0\">VLAN 32\n192.168.2.4/30</text></svg>",
+                "x": 500,
+                "y": -64,
                 "z": 2
             },
             {
                 "drawing_id": "312ff51d-2480-4723-90ad-b56d49cf0220",
                 "locked": false,
                 "rotation": 0,
-                "svg": "<svg width=\"93\" height=\"34\"><text font-family=\"MS Shell Dlg 2\" font-size=\"8.0\" font-weight=\"bold\" fill=\"#ffff00\" fill-opacity=\"1.0\">VLAN 32\n192.168.2.8/30</text></svg>",
+                "svg": "<svg width=\"93\" height=\"34\"><text font-family=\"MS Shell Dlg 2\" font-size=\"8.0\" font-weight=\"bold\" fill=\"#ffff00\" fill-opacity=\"1.0\">VLAN 95\n192.168.2.8/30</text></svg>",
                 "x": 652,
                 "y": -49,
                 "z": 2

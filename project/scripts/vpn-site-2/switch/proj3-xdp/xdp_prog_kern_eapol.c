@@ -58,7 +58,7 @@ static int __do_start_auth(__u8* macaddr, __u32 iface, struct eapdata *data, __u
     __builtin_memcpy(new_psta_val.macaddr, macaddr, sizeof(__u8) * 6);
     new_psta_val.iface = iface;
 
-    bpf_map_update_elem(&pending_auth_sta, identity, &new_psta_val, BPF_EXIST);
+    bpf_map_update_elem(&pending_auth_sta, identity, &new_psta_val, BPF_ANY);
 
     return XDP_PASS;
 }
