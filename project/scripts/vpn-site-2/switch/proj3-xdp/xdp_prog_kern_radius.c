@@ -30,9 +30,6 @@ static int parse_radius_avps(struct radiusavphdr *avps, __u8* username, __u8* vi
 
         __u8 *data = ((void*)avps) + sizeof(struct radiusavphdr);
         __u16 datalen = avps->length - sizeof(struct radiusavphdr);
-        if(((void*)data) + datalen > data_end) {
-            return XDP_DROP;
-        }
 
         if(avps->type == RADIUS_AVP_TYPE_USER_NAME) {
             if(datalen > CONFIG_MAX_IDENT_NAME_LEN) {
