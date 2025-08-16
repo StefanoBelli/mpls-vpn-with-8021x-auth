@@ -11,7 +11,7 @@
 static long __check_req_issue_time_cb(void *map, const void *key, const void *value, void *ctx) {
     struct pending_auth_sta *psta = (struct pending_auth_sta*) map;
     struct pending_auth_sta_val *psta_val = (struct pending_auth_sta_val*) value;
-    struct pending_auth_sta_key *psta_key = (struct pending_auth_sta_key*) key;
+    __u8 *psta_key = (__u8*) key;
 
     __u64 now_time = *((__u64*) ctx);
 
@@ -38,17 +38,15 @@ static int __do_start_auth(__u8* macaddr, __u32 iface, struct eapdata *data, __u
     __u64 now = bpf_ktime_get_boot_ns();
     bpf_for_each_map_elem(&pending_auth_sta, __check_req_issue_time_cb, &now, 0);
 
-    __u8 *identity = (__u8*)(((void*)data) + sizeof(struct eapdata));
+    __u8 *pkt_identity = (__u8*)(((void*)data) + sizeof(struct eapdata));
 
-    struct pending_auth_sta_key psta_key;
-    __builtin_memset(psta_key.identity, 0, CONFIG_MAX_IDENT_NAME_LEN);
-
-    //this is a BPF-verifier-approved "memcpy"
-    for(__u32 i = 0; i < CONFIG_MAX_IDENT_NAME_LEN && ((void*) identity) + i + 1 < data_end; i++) {
-        psta_key.identity[i] = identity[i];
+    __u8 identity[CONFIG_MAX_IDENT_NAME_LEN];
+    __builtin_memset(identity, 0, CONFIG_MAX_IDENT_NAME_LEN);
+    if(bpf_probe_read_kernel(identity, typedatalen, pkt_identity) < 0) {
+        return XDP_DROP;
     }
 
-    struct pending_auth_sta_val *psta_val = bpf_map_lookup_elem(&pending_auth_sta, &psta_key);
+    struct pending_auth_sta_val *psta_val = bpf_map_lookup_elem(&pending_auth_sta, identity);
     if(psta_val != NULL && psta_val->iface != iface) {
         return XDP_PASS;
     }
@@ -60,7 +58,7 @@ static int __do_start_auth(__u8* macaddr, __u32 iface, struct eapdata *data, __u
     __builtin_memcpy(new_psta_val.macaddr, macaddr, sizeof(__u8) * 6);
     new_psta_val.iface = iface;
 
-    bpf_map_update_elem(&pending_auth_sta, &psta_key, &new_psta_val, BPF_EXIST);
+    bpf_map_update_elem(&pending_auth_sta, identity, &new_psta_val, BPF_EXIST);
 
     return XDP_PASS;
 }
@@ -114,10 +112,7 @@ int inspect_eapol_frame(struct xdp_md* ctx) {
         return XDP_DROP;
     }
 
-    struct authd_sta_key sta_key;
-    __builtin_memcpy(sta_key.macaddr, eth->h_source, 6 * sizeof(__u8));
-
-    struct authd_sta_val *sta = bpf_map_lookup_elem(&authd_sta, &sta_key);
+    struct authd_sta_val *sta = bpf_map_lookup_elem(&authd_sta, eth->h_source);
     if(sta != NULL) {
         __u32 sta_cur_iface = sta->current_iface;
         __u32 sta_orig_iface = sta->origin_iface;

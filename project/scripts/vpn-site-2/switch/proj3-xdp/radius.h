@@ -26,8 +26,6 @@ struct radiusavphdr {
 } __attribute__((packed));
 
 #define RADIUS_AVP_TYPE_USER_NAME 1
-#define RADIUS_AVP_TYPE_TUNNEL_TYPE 64
-#define RADIUS_AVP_TYPE_TUNNEL_MEDIUM_TYPE 65
 #define RADIUS_AVP_TYPE_TUNNEL_PRIVATE_GROUP_ID 81
 
 #define HAS_IP(_eth) ((_eth)->h_proto == bpf_htons(ETH_P_IP))

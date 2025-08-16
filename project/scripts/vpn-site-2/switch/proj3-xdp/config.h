@@ -1,13 +1,15 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
-//set of configurable params
+/*
+ * set of configurable params
+ */
 
-#define CONFIG_MAX_CONN_STAS 4
-#define CONFIG_MAX_IDENT_NAME_LEN 256
+#define CONFIG_MAX_CONN_STAS 2
+#define CONFIG_MAX_IDENT_NAME_LEN 20
 #define CONFIG_MAX_IDENTS 2
 #define CONFIG_PENDING_AUTH_DISCARD_NS 60000000000
 #define CONFIG_RADIUS_SPORT 1812
-#define CONFIG_RADIUS_MAX_AVPS 30
+#define CONFIG_RADIUS_MAX_AVPS 200
 
 #endif

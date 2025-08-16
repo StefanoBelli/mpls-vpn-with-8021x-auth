@@ -15,4 +15,4 @@ useful docs for eBPF/XDP things...
 * `ETH_P_PAE`: https://elixir.bootlin.com/linux/v6.16/source/include/uapi/linux/if\_ether.h#L88
 * EAP / EAPOL: https://support.huawei.com/enterprise/en/doc/EDOC1100086527
 * `bpf_printk`: https://docs.ebpf.io/ebpf-library/libbpf/ebpf/bpf\_printk/
-* variable-size `memcpy` issues: https://stackoverflow.com/questions/73088287/how-do-i-copy-data-to-buffer-in-ebpf
+* `bpf_probe_read_kernel`: https://docs.ebpf.io/linux/helper-function/bpf\_probe\_read\_kernel/

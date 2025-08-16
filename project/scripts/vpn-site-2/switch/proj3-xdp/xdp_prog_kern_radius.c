@@ -11,29 +11,53 @@
 #include "maps.h"
 #include "radius.h"
 
-struct avps_parsing_output {
-    __u8 username[CONFIG_MAX_IDENT_NAME_LEN];
-    __u16 usernamelen;
-    __u16 vlan_id;
-};
-
-int get_username_and_vlan_from_avps(struct radiusavphdr *avps, __u16 avpslen, void* data_end, struct avps_parsing_output *out) {
-    out->usernamelen = 0;
-    out->vlan_id = 0;
+static int parse_radius_avps(struct radiusavphdr *avps, __u8* username, __u8* vid, void* data_end) {
+    __u8 has_vid = 0;
+    __u8 has_username = 0;
 
     for(int i = 0; i < CONFIG_RADIUS_MAX_AVPS; i++) {
         if(((void*)avps) + sizeof(struct radiusavphdr) > data_end) {
             return XDP_DROP;
         }
 
+        if(avps->length < 2) {
+            return XDP_DROP;
+        }
+
+        if(((void*)avps) + avps->length > data_end) {
+            return XDP_DROP;
+        }
+
+        __u8 *data = ((void*)avps) + sizeof(struct radiusavphdr);
+        __u16 datalen = avps->length - sizeof(struct radiusavphdr);
+        if(((void*)data) + datalen > data_end) {
+            return XDP_DROP;
+        }
+
         if(avps->type == RADIUS_AVP_TYPE_USER_NAME) {
+            if(datalen > CONFIG_MAX_IDENT_NAME_LEN) {
+                return XDP_DROP;
+            }
 
-        } else if(avps->type == RADIUS_AVP_TYPE_TUNNEL_MEDIUM_TYPE) {
+            if(bpf_probe_read_kernel(username, datalen, data) < 0) {
+                return XDP_DROP;
+            }
 
-        } else if(avps->type == RADIUS_AVP_TYPE_TUNNEL_TYPE) {
-
+            has_username = 1;
         } else if(avps->type == RADIUS_AVP_TYPE_TUNNEL_PRIVATE_GROUP_ID) {
+            if(datalen > 4) {
+                return XDP_DROP;
+            }
 
+            if(bpf_probe_read_kernel(username, datalen, data) < 0) {
+                return XDP_DROP;
+            }
+
+            has_vid = 1;
+        }
+
+        if(has_username && has_vid) {
+            return XDP_PASS;
         }
 
         avps = ((void*)avps) + avps->length;
@@ -42,7 +66,35 @@ int get_username_and_vlan_from_avps(struct radiusavphdr *avps, __u16 avpslen, vo
     return XDP_PASS;
 }
 
-int extract_radiushdr(struct ethhdr *frame, struct radiushdr **out, void *data_end) {
+static int finalize_auth(__u8 *identity, __u8 *vid, __u32 current_iface) {
+    struct pending_auth_sta_val *pendauthsta = bpf_map_lookup_elem(&pending_auth_sta, identity);
+    if(pendauthsta == NULL) {
+        return XDP_DROP;
+    }
+
+    struct authd_sta_val authdsta;
+    authdsta.last_seen = bpf_ktime_get_boot_ns();
+    authdsta.current_iface = current_iface;
+    authdsta.origin_iface = pendauthsta->iface;
+    __builtin_memcpy(authdsta.vlan_id, vid, 5);
+    authdsta.user_known = 0;
+    authdsta.supplicant_logoff = 0;
+
+    __u8 macaddr[6];
+    __builtin_memcpy(macaddr, pendauthsta->macaddr, 6);
+
+    if(bpf_map_delete_elem(&pending_auth_sta, identity) < 0) {
+        return XDP_DROP;
+    }
+
+    if(bpf_map_update_elem(&authd_sta, macaddr, &authdsta, BPF_NOEXIST) < 0) {
+        return XDP_DROP;
+    }
+
+    return XDP_PASS;
+}
+
+static int extract_radiushdr(struct ethhdr *frame, struct radiushdr **out, void *data_end) {
     *out = NULL;
 
     if(HAS_IP(frame)) {
@@ -88,16 +140,20 @@ int inspect_radius_frame(struct xdp_md* ctx) {
     }
 
     if(radius->code == RADIUS_CODE_ACCESS_ACCEPT) {
-        struct avps_parsing_output out;
-        __builtin_memset(&out, 0, sizeof(struct avps_parsing_output));
+        struct radiusavphdr *avps = (struct radiusavphdr*) ((void*)radius) + sizeof(struct radiushdr);
 
-        struct radiusavphdr* avps = (struct radiusavphdr*)((void*)radius) + sizeof(struct radiushdr);
-        __u16 avpstotlen = radius->length - sizeof(struct radiushdr);
+        __u8 username[CONFIG_MAX_IDENT_NAME_LEN];
+        __u8 vid[5];
 
-        rv = get_username_and_vlan_from_avps(avps, avpstotlen, data_end, &out);
-        if(out.usernamelen == 0) {
+        __builtin_memset(username, 0, CONFIG_MAX_IDENT_NAME_LEN);
+        __builtin_memset(vid, 0, 5);
+
+        rv = parse_radius_avps(avps, username, vid, data_end);
+        if(username[0] == 0 || vid[0] == 0) {
             return rv;
         }
+
+        return finalize_auth(username, vid, ctx->ingress_ifindex);
     }
 
     return XDP_PASS;
