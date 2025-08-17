@@ -19,14 +19,7 @@ struct {
     __uint(pinning, LIBBPF_PIN_BY_NAME);
 } pending_auth_sta SEC(".maps");
 
-struct authd_sta_val {
-    __u64 last_seen;
-    __u32 current_iface;
-    __u32 origin_iface;
-    __u8 vlan_id[5];
-    __u8 user_known;
-    __u8 supplicant_logoff;
-};
+#include "shmapsdefs.h"
 
 struct {
     __uint(type, BPF_MAP_TYPE_HASH);
