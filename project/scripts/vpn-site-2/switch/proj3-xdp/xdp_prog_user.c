@@ -11,23 +11,40 @@
 #include "die.h"
 #include "shmapsdefs.h"
 
-#ifndef DISCONNECT_AFTER_INACTIVITY_THR_NS
-#define DISCONNECT_AFTER_INACTIVITY_THR_NS 600000000000LL
+#define EXTENDED_SUPPORT
+
+#ifdef EXTENDED_SUPPORT
+#warning extended support is enabled
+#endif
+
+#define NANO_PER_SEC 1000000000LL
+
+#ifndef DEFAULT_DISCONNECT_AFTER_INACTIVITY_THR_SEC
+#define DEFAULT_DISCONNECT_AFTER_INACTIVITY_THR_SEC (10 * 60)
 #endif
 
 #ifndef DEFAULT_BPFFS_PATH
 #define DEFAULT_BPFFS_PATH "/sys/fs/bpf/xdp/globals"
 #endif
 
-static char bpffs[PATH_MAX];
+#ifndef DEFAULT_EBPF_MAP
+#define DEFAULT_EBPF_MAP "authd_sta"
+#endif
 
-static int open_bpf_map_by_name(const char* name) {
+extern int optind;
+extern char* optarg;
+
+static char bpffs[PATH_MAX];
+static char ebpf_map_name[NAME_MAX];
+static __u64 disconnect_thr_ns;
+
+static int open_bpf_map_by_name() {
     char full_map_path[PATH_MAX];
     memset(full_map_path, 0, sizeof(full_map_path));
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wformat-truncation"
-    snprintf(full_map_path, PATH_MAX, "%s/%s", bpffs, name);
+    snprintf(full_map_path, PATH_MAX, "%s/%s", bpffs, ebpf_map_name);
 #pragma GCC diagnostic pop
 
     int fd = bpf_obj_get(full_map_path);
@@ -38,27 +55,70 @@ static int open_bpf_map_by_name(const char* name) {
     return fd;
 }
 
-static void load_defaults() {
+static void load_bpffs(const char* path) {
     memset(bpffs, 0, sizeof(bpffs));
-    strncpy(bpffs, DEFAULT_BPFFS_PATH, sizeof(bpffs) - 1);
+    strncpy(bpffs, path, sizeof(bpffs) - 1);
+}
+
+static void load_ebpf_map_name(const char* map_name) {
+    memset(ebpf_map_name, 0, sizeof(ebpf_map_name));
+    strncpy(ebpf_map_name, map_name, sizeof(ebpf_map_name) - 1);
+}
+
+static void load_disconnect_thr_ns(__u64 thr_sec) {
+    disconnect_thr_ns = thr_sec * NANO_PER_SEC;
 }
 
 static void print_program_settings() {
     printf(" * BPF fs path: %s\n", bpffs);
+    printf(" * eBPF map: %s\n", ebpf_map_name);
+    printf(" * Station inactivity threshold: %lld secs\n", disconnect_thr_ns / NANO_PER_SEC);
+}
+
+static __u64 charp_to_ull(const char* s) {
+    errno = 0;
+    char * endp;
+    __u64 v = strtoull(s, &endp, 10);
+
+    if(errno == ERANGE) {
+        printf("number %s of out of range\n", s);
+        exit(EXIT_FAILURE);
+    }
+
+    if(endp == s || *endp != 0) {
+        printf("invalid number %s\n", s);
+        exit(EXIT_FAILURE);
+    }
+
+    return v;
 }
 
 static void event_polling(int);
 
-int main() {
+int main(int argc, char **argv) {
     if(getuid() != 0) {
         fputs("this program must be run as root\n", stderr);
         return EXIT_FAILURE;
     }
 
-    load_defaults();
+    load_bpffs(DEFAULT_BPFFS_PATH);
+    load_ebpf_map_name(DEFAULT_EBPF_MAP);
+    load_disconnect_thr_ns(DEFAULT_DISCONNECT_AFTER_INACTIVITY_THR_SEC);
+
+    char optch;
+    while((optch = getopt(argc, argv, "p:m:t:")) != -1) {
+        if(optch == 'p') {
+            load_bpffs(optarg);
+        } else if(optch == 'm') {
+            load_ebpf_map_name(optarg);
+        } else if(optch == 't') {
+            load_disconnect_thr_ns(charp_to_ull(optarg));
+        }
+    }
+
     print_program_settings();
 
-    int map_fd = open_bpf_map_by_name("authd_sta");
+    int map_fd = open_bpf_map_by_name();
     event_polling(map_fd);
 
     //unreachable code
@@ -68,30 +128,35 @@ int main() {
 
 /* Event polling and policy enforcement */
 
-#define NANO_PER_SEC 1000000000LL
-
 #define timespec_to_ns(ts) (((__u64)(ts).tv_sec) * NANO_PER_SEC + (ts).tv_nsec)
 
 #define NEED_TO_DENY_ACCESS(x) \
-    ((subtract_times(timespec_to_ns(now), (x).last_seen) > DISCONNECT_AFTER_INACTIVITY_THR_NS) || \
+    ((subtract_times(timespec_to_ns(now), (x).last_seen) > disconnect_thr_ns) || \
     ((x).current_iface != (x).origin_iface) || \
     ((x).supplicant_logoff))
 
-#define s_always_inline static inline __attribute__((always_inline))
+#define subtract_times(_ns_x, _ns_y) \
+    ((_ns_y) >= (_ns_x) ? 0 : (_ns_x) - (_ns_y))
 
-s_always_inline __u64 subtract_times(__u64 ns_x, __u64 ns_y) {
-    if(ns_y >= ns_x) {
-        return 0;
-    }
-
-    return ns_x - ns_y;
-}
+#define arrcmp(_x, _y, _sz) ({ \
+    int rv = 1; \
+    for(int i = 0; i < _sz; i++) { \
+        if(_x[i] != _y[i]) { \
+            rv = 0; \
+            break; \
+        } \
+    } \
+    rv; })
 
 #define DEFINE_IFNAME_FROM_IFINDEX(_ifnamevar, ifindex) \
     char _ifnamevar[IF_NAMESIZE]; \
     if(if_indextoname(ifindex, _ifnamevar) == NULL) { \
         __die0(if_indextoname); \
     }
+
+#define DEFINE_STRFTIME(_varn) \
+    char _varn[100]; \
+    __fmttime(_varn)
 
 #define CMDLINE_MAX 256
 
@@ -121,6 +186,16 @@ static void allow_access(const __u8 *macaddr, const struct authd_sta_val *val) {
     char cmdbuf[CMDLINE_MAX];
     DEFINE_IFNAME_FROM_IFINDEX(ifname, val->origin_iface);
 
+#ifdef EXTENDED_SUPPORT
+    memset(cmdbuf, 0, CMDLINE_MAX);
+    snprintf(cmdbuf, CMDLINE_MAX, "bridge vlan del dev %s vid 95 pvid untagged", ifname);
+    run_command(cmdbuf);
+
+    memset(cmdbuf, 0, CMDLINE_MAX);
+    snprintf(cmdbuf, CMDLINE_MAX, "bridge vlan del dev %s vid 32 pvid untagged", ifname);
+    run_command(cmdbuf);
+#endif
+
     memset(cmdbuf, 0, CMDLINE_MAX);
     snprintf(cmdbuf, CMDLINE_MAX, "bridge vlan add dev %s vid %s pvid untagged", ifname, val->vlan_id);
     run_command(cmdbuf);
@@ -135,6 +210,7 @@ static void deny_access(const __u8 *macaddr, const struct authd_sta_val *val) {
     char cmdbuf[CMDLINE_MAX];
     DEFINE_IFNAME_FROM_IFINDEX(ifname, val->origin_iface);
 
+#ifndef EXTENDED_SUPPORT
     memset(cmdbuf, 0, CMDLINE_MAX);
     snprintf(cmdbuf, CMDLINE_MAX, "bridge vlan del dev %s vid %s pvid untagged", ifname, val->vlan_id);
     run_command(cmdbuf);
@@ -142,6 +218,7 @@ static void deny_access(const __u8 *macaddr, const struct authd_sta_val *val) {
     memset(cmdbuf, 0, CMDLINE_MAX);
     snprintf(cmdbuf, CMDLINE_MAX, "bridge vlan add dev %s vid 1 pvid untagged", ifname);
     run_command(cmdbuf);
+#endif
 
     memset(cmdbuf, 0, CMDLINE_MAX);
     snprintf(cmdbuf, CMDLINE_MAX, "ebtables -D FORWARD -s %02X:%02X:%02X:%02X:%02X:%02X -j ACCEPT",
@@ -158,10 +235,6 @@ static void __fmttime(char buf[100]) {
     struct tm *timeinfo = localtime(&raw);
     strftime(buf, 100, "%F %r", timeinfo);
 }
-
-#define DEFINE_STRFTIME(_varn) \
-    char _varn[100]; \
-    __fmttime(_varn)
 
 static void __base_log(const char* evt, const __u8 *macaddr, const struct authd_sta_val *val) {
     DEFINE_STRFTIME(nowtime);
@@ -187,6 +260,44 @@ static void log_access_denied(const __u8 *macaddr, const struct authd_sta_val *v
     __base_log("denied", macaddr, val);
 }
 
+#ifdef EXTENDED_SUPPORT
+
+static void deny_access_to_sta_on_iface(int map, __u32 ifindex, __u8 *notkey) {
+    __u8 prev_key[6];
+    __u8 cur_key[6];
+    void *prev_key_ptr = NULL;
+
+    int rv;
+    while((rv = bpf_map_get_next_key(map, prev_key_ptr, cur_key)) == 0) {
+        struct authd_sta_val cur_val;
+
+        if(bpf_map_lookup_elem(map, cur_key, &cur_val) != 0) {
+            __die0(bpf_map_lookup_elem);
+        }
+
+        if(!arrcmp(notkey, cur_key, 6) && cur_val.current_iface == ifindex && cur_val.user_known) {
+            deny_access(cur_key, &cur_val);
+            if(bpf_map_delete_elem(map, cur_key) < 0) {
+                __die0(bpf_map_delete_elem);
+            }
+
+            log_access_denied(cur_key, &cur_val);
+            return;
+        }
+
+        memcpy(prev_key, cur_key, sizeof(__u8) * 6);
+        if(prev_key_ptr == NULL) {
+            prev_key_ptr = prev_key;
+        }
+    }
+
+    if(rv != -ENOENT) {
+        __die0(bpf_map_get_next_key);
+    }
+}
+
+#endif
+
 static void event_polling(int map) {
     printf("starting event polling...\n");
 
@@ -205,12 +316,16 @@ static void event_polling(int map) {
         while((rv = bpf_map_get_next_key(map, prev_key_ptr, cur_key)) == 0) {
             struct authd_sta_val cur_val;
 
-            int rv = bpf_map_lookup_elem(map, cur_key, &cur_val);
-            if(rv != 0) {
+            if(bpf_map_lookup_elem(map, cur_key, &cur_val) != 0) {
                 __die0(bpf_map_lookup_elem);
             }
 
             if(NEED_TO_DENY_ACCESS(cur_val)) {
+#ifdef EXTENDED_SUPPORT
+                if(cur_val.origin_iface != cur_val.current_iface) {
+                    deny_access_to_sta_on_iface(map, cur_val.current_iface, cur_key);
+                }
+#endif
                 deny_access(cur_key, &cur_val);
                 if(bpf_map_delete_elem(map, cur_key) < 0) {
                     __die0(bpf_map_delete_elem);
@@ -221,6 +336,9 @@ static void event_polling(int map) {
             }
 
             if(!cur_val.user_known) {
+#ifdef EXTENDED_SUPPORT
+                deny_access_to_sta_on_iface(map, cur_val.current_iface, cur_key);
+#endif
                 allow_access(cur_key, &cur_val);
                 cur_val.user_known = 1;
                 if(bpf_map_update_elem(map, cur_key, &cur_val, 0) < 0) {
