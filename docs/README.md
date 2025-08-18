@@ -586,6 +586,81 @@ vtysh -f frrconf
 
  * **client-B1**
 
+ net.sh
+
+```bash
+#!/bin/bash
+
+IPADDR=192.168.2.6/30
+GATEWAY=192.168.2.5
+
+#IPADDR=192.168.3.2/24
+#GATEWAY=192.168.3.1
+
+ip addr add $IPADDR dev eth0
+ip route add default via $GATEWAY dev eth0
+
+INSTALLDIR=/etc
+install -D -m400 wpa_supplicant.conf $INSTALLDIR/wpa_supplicant.conf
+```
+
+ wpa_supplicant.conf
+
+```bash
+ap_scan=0
+network={
+ key_mgmt=IEEE8021X
+ eap=MD5
+ identity="clientb1"
+ password="clientb1passwd"
+ eapol_flags=0
+}
+```
+
+ wpa_supplicant.sh
+
+```bash
+#!/bin/bash
+
+wpa_supplicant -B -c/etc/wpa_supplicant.conf -Dwired -ieth0
+```
+
  * **client-B2**
+
+ net.sh
+```bash
+#!/bin/bash
+
+IPADDR=192.168.2.10/30
+GATEWAY=192.168.2.9
+
+#IPADDR=192.168.4.2/24
+#GATEWAY=192.168.4.1
+
+ip addr add $IPADDR dev eth0
+ip route add default via $GATEWAY dev eth0
+
+INSTALLDIR=/etc
+install -D -m400 wpa_supplicant.conf $INSTALLDIR/wpa_supplicant.conf
+```
+
+ wpa_supplicant.conf
+```bash
+ap_scan=0
+network={
+ key_mgmt=IEEE8021X
+ eap=MD5
+ identity="clientb2"
+ password="clientb2passwd"
+ eapol_flags=0
+}
+```
+
+ wpa_supplicant.sh
+```bash
+#!/bin/bash
+
+wpa_supplicant -B -c/etc/wpa_supplicant.conf -Dwired -ieth0
+```
 
 ## Conclusioni
