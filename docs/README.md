@@ -3,11 +3,11 @@ Stefano Belli, matricola 0350116
 Anno accademico 2024/2025
 
 ## Indice
-1. [Introduzione](#intro)
-2. [Configurazione della backbone (AS100)](#as100)
-3. [Configurazione della VPN site 1](#vpn-site-1)
-4. [Configurazione della VPN site 2](#vpn-site-2)
-5. [Configurazione della VPN site 3](#vpn-site-3)
+1. [Introduzione](#introduzione)
+2. [Configurazione della backbone (AS100)](#configurazione-della-backbone-as100)
+3. [Configurazione della VPN site 1](#configurazione-della-vpn-site-1)
+4. [Configurazione della VPN site 2](#configurazione-della-vpn-site-2)
+5. [Configurazione della VPN site 3](#configurazione-della-vpn-site-3)
 4. [Conclusioni](#conclusioni)
 
 
