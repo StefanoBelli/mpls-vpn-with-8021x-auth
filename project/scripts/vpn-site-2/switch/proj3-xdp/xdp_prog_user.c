@@ -11,7 +11,7 @@
 #include "die.h"
 #include "shmapsdefs.h"
 
-#define EXTENDED_SUPPORT
+//#define EXTENDED_SUPPORT
 
 #ifdef EXTENDED_SUPPORT
 #warning extended support is enabled

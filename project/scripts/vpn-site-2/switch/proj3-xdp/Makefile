@@ -55,8 +55,8 @@ RM_TARGET_MAPS ?= authd_sta pending_auth_sta
 remove-pinned-maps:
         @for map in $(RM_TARGET_MAPS); do \
                 rm $(PINNED_MAPS_PATH)/$${map} && \
-                        echo "[ OK ] map $${map} removed" || \
-                        echo "[ FAIL ] map $${map} **NOT** removed"; \
+                        echo "[ OK ] map $(PINNED_MAPS_PATH)/$${map} removed" || \
+                        echo "[ FAIL ] map $(PINNED_MAPS_PATH)/$${map} **NOT** removed"; \
         done
 
 remove-xdp: remove-xdp-only remove-pinned-maps
