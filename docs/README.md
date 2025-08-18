@@ -37,7 +37,7 @@ che è l'authentication server.
 
  frrconf
 
- ```bash
+```bash
 interface eth0
  ip address 10.0.0.1/30
 
@@ -49,15 +49,15 @@ ip route 0.0.0.0/0 10.0.0.2
 router bgp 65000
  network 192.168.0.0/24
  neighbor 10.0.0.2 remote-as 100
- ```
+```
 
  net.sh
 
- ```bash
+```bash
 #!/bin/bash
 
 vtysh -f frrconf
- ```
+```
 
  * **client-A1**
 
@@ -67,7 +67,7 @@ vtysh -f frrconf
 
  frrconf
 
- ```bash
+```bash
 interface eth0
  ip address 10.0.0.9/30
 
@@ -79,11 +79,11 @@ ip route 0.0.0.0/0 10.0.0.10
 router bgp 65002
  network 192.168.2.0/24
  neighbor 10.0.0.10 remote-as 100
- ```
+```
 
  net.sh
 
- ```bash
+```bash
 #!/bin/bash
 
 vtysh -f frrconf
@@ -103,13 +103,13 @@ VLAN_32_IPADDR=192.168.2.5/30
 
 ip addr add $VLAN_95_IPADDR dev eth1.95
 ip addr add $VLAN_32_IPADDR dev eth1.32
- ```
+```
 
  * **RADIUS**
 
  net.sh
 
- ```bash
+```bash
 #!/bin/bash
 
 ip addr add 192.168.1.2/24 dev eth0
@@ -128,29 +128,29 @@ install -D -m444 clients.conf $INSTALLDIR/clients.conf
 
 install -D -m444 authorize $INSTALLDIR/mods-config/files/authorize
 install -m444 authorize $INSTALLDIR/users
- ```
+```
 
  radius.sh
 
- ```bash
+```bash
 #!/bin/bash
 
 freeradius $@
- ```
+```
 
  clients.conf
 
- ```bash
+```bash
 client vs2switch {
  ipaddr = 192.168.2.2
  secret = "mysecretpasswd"
  shortname = authnserv
 }
- ```
+```
 
  authorize
 
- ```bash
+```bash
 clientb1 Cleartext-Password := "clientb1passwd"
         Service-Type = Framed-User,
         Tunnel-Type = 13,
@@ -162,7 +162,7 @@ clientb2 Cleartext-Password := "clientb2passwd"
         Tunnel-Type = 13,
         Tunnel-Medium-Type = 6,
         Tunnel-Private-Group-ID = 95
- ```
+```
 
 ## Configurazione della VPN site 3
 
@@ -170,7 +170,7 @@ clientb2 Cleartext-Password := "clientb2passwd"
 
  frrconf
 
- ```bash
+```bash
 interface eth0
  ip address 10.0.0.5/30
 
@@ -182,15 +182,15 @@ ip route 0.0.0.0/0 10.0.0.6
 router bgp 65001
  network 192.168.1.0/24
  neighbor 10.0.0.6 remote-as 100
- ```
+```
 
  net.sh
 
- ```bash
+```bash
 #!/bin/bash
 
 vtysh -f frrconf
- ```
+```
 
  * **switch**
 
