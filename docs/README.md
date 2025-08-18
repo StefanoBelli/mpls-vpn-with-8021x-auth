@@ -584,6 +584,1018 @@ vtysh -f frrconf
 
  * **switch**
 
+ net.sh
+
+```bash
+#!/bin/bash
+
+ip link add bridge0 type bridge
+ip link set bridge0 type bridge vlan_filtering 1
+ip link set eth0 master bridge0
+ip link set eth1 master bridge0
+ip link set eth2 master bridge0
+ip link set bridge0 up
+
+bridge vlan del vid 1 dev eth2 pvid untagged
+
+bridge vlan add vid 95 dev eth2
+bridge vlan add vid 32 dev eth2
+bridge vlan add vid 10 dev eth2 pvid untagged
+
+bridge vlan add dev bridge0 vid 95 self
+bridge vlan add dev bridge0 vid 32 self
+bridge vlan add dev bridge0 vid 10 self
+
+ip link add auth.bridge0.10 link bridge0 type vlan id 10
+ip addr add 192.168.2.2/24 dev auth.bridge0.10
+
+ip link set auth.bridge0.10 up
+
+ip route add default via 192.168.2.1 dev auth.bridge0.10
+
+echo 8 > /sys/class/net/bridge0/bridge/group_fwd_mask
+
+ebtables -P FORWARD DROP
+ebtables -P INPUT ACCEPT
+ebtables -P OUTPUT ACCEPT
+ebtables -A FORWARD -i eth2 -j ACCEPT
+
+INSTALLDIR=/etc/hostapd
+install -D -m600 hostapd.conf $INSTALLDIR/hostapd.conf
+```
+
+ hostapd.sh
+
+```bash
+#!/bin/bash
+
+hostapd -d /etc/hostapd/hostapd.conf
+```
+
+ hostapd.conf
+
+```bash
+# Control interface settings
+ctrl_interface=/var/run/hostapd
+ctrl_interface_group=0
+
+# Enable logging for all modules
+logger_syslog=-1
+logger_stdout=-1
+
+# Log level
+logger_syslog_level=2
+logger_stdout_level=2
+
+# Driver interface type
+driver=wired
+
+# Enable IEEE 802.1X authorization
+ieee8021x=1
+
+# Use port access entry (PAE) group address
+# (01:80:c2:00:00:03) when sending EAPOL frames
+use_pae_group_addr=1
+
+# Network interface for authentication requests
+interface=bridge0
+
+# Local IP address used as NAS-IP-Address
+own_ip_addr=192.168.2.2
+
+# Unique NAS-Identifier within scope of RADIUS server
+nas_identifier=hostapd.example.org
+
+# RADIUS authentication server
+auth_server_addr=192.168.1.2
+auth_server_port=1812
+auth_server_shared_secret=mysecretpasswd
+```
+
+ proj3-xdp/config.h
+
+```c
+#ifndef CONFIG_H
+#define CONFIG_H
+
+/*
+ * set of configurable params
+ */
+
+#define CONFIG_MAX_CONN_STAS 2
+#define CONFIG_MAX_IDENT_NAME_LEN 20
+#define CONFIG_MAX_IDENTS 2
+#define CONFIG_PENDING_AUTH_DISCARD_NS 60000000000
+#define CONFIG_RADIUS_SPORT 1812
+#define CONFIG_RADIUS_MAX_AVPS 200
+
+#endif
+```
+
+ proj3-xdp/die.h
+ 
+```c
+#ifndef DIE_H
+#define DIE_H
+
+#define __die0(fun) \
+    do { \
+        perror(#fun); \
+        exit(EXIT_FAILURE); \
+    } while(0)
+
+#define __die1(fun, param) \
+    do { \
+        fprintf(stderr, #fun "(%s): %s\n", param, strerror(errno)); \
+        exit(EXIT_FAILURE); \
+    } while(0)
+
+#endif
+```
+
+ proj3-xdp/eapol.h
+
+```c
+#ifndef EAPOL_H
+#define EAPOL_H
+
+struct eapolhdr {
+    __u8 version;
+    __u8 type;
+    __u16 length;
+} __attribute__((packed));
+
+struct eaphdr {
+    __u8 code;
+    __u8 id;
+    __u16 length;
+} __attribute__((packed));
+
+struct eapdata {
+    __u8 type;
+} __attribute__((packed));
+
+#define EAP_RESPONSE 2
+#define EAP_RESPONSE_TYPE_IDENTITY 1
+#define EAPOL_EAP 0
+#define EAPOL_LOGOFF 2
+#define HAS_EAPOL(frame) ((frame)->h_proto == bpf_htons(ETH_P_PAE))
+
+#endif
+```
+
+ proj3-xdp/maps.h
+ 
+```c
+#ifndef MAPS_H
+#define MAPS_H
+
+#ifndef CONFIG_H
+#error You must include config.h before maps.h
+#endif
+
+struct pending_auth_sta_val {
+    __u64 req_issue_time;
+    __u32 iface;
+    __u8 macaddr[6];
+};
+
+struct {
+    __uint(type, BPF_MAP_TYPE_HASH);
+    __uint(max_entries, CONFIG_MAX_IDENTS);
+    __type(key, __u8[CONFIG_MAX_IDENT_NAME_LEN]);
+    __type(value, struct pending_auth_sta_val);
+    __uint(pinning, LIBBPF_PIN_BY_NAME);
+} pending_auth_sta SEC(".maps");
+
+#include "shmapsdefs.h"
+
+struct {
+    __uint(type, BPF_MAP_TYPE_HASH);
+    __uint(max_entries, CONFIG_MAX_CONN_STAS);
+    __type(key, __u8[6]);
+    __type(value, struct authd_sta_val);
+    __uint(pinning, LIBBPF_PIN_BY_NAME);
+} authd_sta SEC(".maps");
+
+#endif
+```
+
+ proj3-xdp/radius.h
+
+```c
+#ifndef RADIUS_H
+#define RADIUS_H
+
+#ifndef CONFIG_H
+#error You must include config.h before radius.h
+#endif
+
+// note : length includes # of bytes for the whole RADIUS payload within UDP
+//        that is - code + id + length + authenticator + avps
+
+struct radiushdr {
+    __u8 code;
+    __u8 id;
+    __u16 length;
+    __u8 authenticator[16];
+} __attribute__((packed));
+
+#define RADIUS_CODE_ACCESS_ACCEPT 2
+
+// note : length includes # of bytes for the whole AVP payload within RADIUS
+//        that is - avp.type + avp.length + avp.type_specific_data
+
+struct radiusavphdr {
+    __u8 type;
+    __u8 length;
+} __attribute__((packed));
+
+#define RADIUS_AVP_TYPE_USER_NAME 1
+#define RADIUS_AVP_TYPE_TUNNEL_PRIVATE_GROUP_ID 81
+
+#define HAS_IP(_eth) ((_eth)->h_proto == bpf_htons(ETH_P_IP))
+#define HAS_UDP(_ip) ((_ip)->protocol == IPPROTO_UDP)
+#define HAS_RADIUS(_udp) ((_udp)->source == bpf_htons(CONFIG_RADIUS_SPORT))
+
+#endif
+```
+
+ proj3-xdp/shmapsdefs.h
+ 
+```c
+#ifndef SHMAPSDEFS_H
+#define SHMAPSDEFS_H
+
+struct authd_sta_val {
+    __u64 last_seen;
+    __u32 current_iface;
+    __u32 origin_iface;
+    __u8 vlan_id[5];
+    __u8 user_known;
+    __u8 supplicant_logoff;
+};
+
+#endif
+```
+
+ proj3-xdp/xdp_prog_kern_eapol.c
+
+```c
+#include <linux/bpf.h>
+#include <linux/if_ether.h>
+
+#include <bpf/bpf_helpers.h>
+#include <bpf/bpf_endian.h>
+
+#include "config.h"
+#include "maps.h"
+#include "eapol.h"
+
+static long __check_req_issue_time_cb(void *map, const void *key, const void *value, void *ctx) {
+    struct pending_auth_sta *psta = (struct pending_auth_sta*) map;
+    struct pending_auth_sta_val *psta_val = (struct pending_auth_sta_val*) value;
+    __u8 *psta_key = (__u8*) key;
+
+    __u64 now_time = *((__u64*) ctx);
+
+    if(now_time - psta_val->req_issue_time >= CONFIG_PENDING_AUTH_DISCARD_NS) {
+        if(bpf_map_delete_elem(psta, psta_key) < 0) {
+            bpf_printk("unable to delete pending request (bpf_map_delete_elem failure)\n");
+        }
+    }
+
+    return 0;
+}
+
+static int __do_start_auth(__u8* macaddr, __u32 iface, struct eapdata *data, __u16 typedatalen, void* data_end) {
+    if(typedatalen > CONFIG_MAX_IDENT_NAME_LEN) {
+        return XDP_DROP;
+    }
+
+    if(((void*)data) + sizeof(struct eapdata) > data_end) {
+        return XDP_DROP;
+    }
+
+    if(data->type != EAP_RESPONSE_TYPE_IDENTITY) {
+        return XDP_PASS;
+    }
+
+    __u64 now = bpf_ktime_get_boot_ns();
+    bpf_for_each_map_elem(&pending_auth_sta, __check_req_issue_time_cb, &now, 0);
+
+    __u8 *pkt_identity = (__u8*)(((void*)data) + sizeof(struct eapdata));
+
+    __u8 identity[CONFIG_MAX_IDENT_NAME_LEN];
+    __builtin_memset(identity, 0, CONFIG_MAX_IDENT_NAME_LEN);
+    if(bpf_probe_read_kernel(identity, typedatalen, pkt_identity) < 0) {
+        return XDP_DROP;
+    }
+
+    struct pending_auth_sta_val *psta_val = bpf_map_lookup_elem(&pending_auth_sta, identity);
+    if(psta_val != NULL && psta_val->iface != iface) {
+        return XDP_PASS;
+    }
+
+    struct pending_auth_sta_val new_psta_val;
+    __builtin_memset(&new_psta_val, 0, sizeof(struct pending_auth_sta_val));
+
+    new_psta_val.req_issue_time = now;
+    __builtin_memcpy(new_psta_val.macaddr, macaddr, sizeof(__u8) * 6);
+    new_psta_val.iface = iface;
+
+    if(bpf_map_update_elem(&pending_auth_sta, identity, &new_psta_val, BPF_ANY) < 0) {
+        return XDP_DROP;
+    }
+
+    return XDP_PASS;
+}
+
+static int check_if_supplicant_logoff(struct ethhdr* frame, struct authd_sta_val *sta, void *data_end) {
+    if(HAS_EAPOL(frame)) {
+        struct eapolhdr *eapol = (struct eapolhdr*) (((void*)frame) + sizeof(struct ethhdr));
+        if(((void*)eapol) + sizeof(struct eapolhdr) > data_end) {
+            return XDP_DROP;
+        }
+
+        if(eapol->type == EAPOL_LOGOFF) {
+            sta->supplicant_logoff = 1;
+        }
+    }
+
+    return XDP_PASS;
+}
+
+static int attempt_start_auth(__u32 iface, struct ethhdr* frame, void* data_end) {
+    if(HAS_EAPOL(frame)) {
+        struct eapolhdr *eapol = (struct eapolhdr*) (((void*)frame) + sizeof(struct ethhdr));
+        if(((void*)eapol) + sizeof(struct eapolhdr) > data_end) {
+            return XDP_DROP;
+        }
+
+        if(eapol->type == EAPOL_EAP) {
+            struct eaphdr *eap = (struct eaphdr*) (((void*)eapol) + sizeof(struct eapolhdr));
+            if(((void*)eap) + sizeof(struct eaphdr) > data_end) {
+                return XDP_DROP;
+            }
+
+            if(eap->code == EAP_RESPONSE) {
+                struct eapdata *eapdata = (struct eapdata*) (((void*)eap) + sizeof(struct eaphdr));
+                __u16 tdlen = bpf_ntohs(eap->length) - sizeof(struct eapdata) - sizeof(struct eaphdr);
+                return __do_start_auth(frame->h_source, iface, eapdata, tdlen, data_end);
+            }
+        }
+    }
+
+    return XDP_PASS;
+}
+
+SEC("xdp")
+int inspect_eapol_frame(struct xdp_md* ctx) {
+    void *data_end = (void*)((__u64) ctx->data_end);
+    void *data = (void*)((__u64) ctx->data);
+
+    struct ethhdr *eth = data;
+    if(((void*)eth) + sizeof(struct ethhdr) > data_end) {
+        return XDP_DROP;
+    }
+
+    struct authd_sta_val *sta = bpf_map_lookup_elem(&authd_sta, eth->h_source);
+    if(sta != NULL) {
+        __u32 sta_cur_iface = sta->current_iface;
+        __u32 sta_orig_iface = sta->origin_iface;
+        __u8 sta_logoff = sta->supplicant_logoff;
+
+        if(sta_cur_iface != sta_orig_iface || sta_logoff) {
+            return XDP_DROP;
+        }
+
+        sta->current_iface = ctx->ingress_ifindex;
+
+        if(sta->current_iface != sta_orig_iface) {
+            return XDP_DROP;
+        }
+
+        sta->last_seen = bpf_ktime_get_boot_ns();
+
+        return check_if_supplicant_logoff(eth, sta, data_end);
+    }
+
+    return attempt_start_auth(ctx->ingress_ifindex, eth, data_end);
+}
+
+char LICENSE[] SEC("license") = "GPL";
+
+```
+
+ proj3-xdp/xdp_prog_kern_radius.c
+ 
+```c
+#include <linux/bpf.h>
+#include <linux/if_ether.h>
+#include <linux/ip.h>
+#include <linux/in.h>
+#include <linux/udp.h>
+
+#include <bpf/bpf_helpers.h>
+#include <bpf/bpf_endian.h>
+
+#include "config.h"
+#include "maps.h"
+#include "radius.h"
+
+static int parse_radius_avps(struct radiusavphdr *avps, __u8* username, __u8* vid, void* data_end) {
+    __u8 has_vid = 0;
+    __u8 has_username = 0;
+
+    for(int i = 0; i < CONFIG_RADIUS_MAX_AVPS; i++) {
+        if(((void*)avps) + sizeof(struct radiusavphdr) > data_end) {
+            return XDP_DROP;
+        }
+
+        if(avps->length < 2) {
+            return XDP_DROP;
+        }
+
+        if(((void*)avps) + avps->length > data_end) {
+            return XDP_DROP;
+        }
+
+        __u8 *data = ((void*)avps) + sizeof(struct radiusavphdr);
+        __u16 datalen = avps->length - sizeof(struct radiusavphdr);
+
+        if(avps->type == RADIUS_AVP_TYPE_USER_NAME) {
+            if(datalen > CONFIG_MAX_IDENT_NAME_LEN) {
+                return XDP_DROP;
+            }
+
+            if(bpf_probe_read_kernel(username, datalen, data) < 0) {
+                return XDP_DROP;
+            }
+
+            has_username = 1;
+        } else if(avps->type == RADIUS_AVP_TYPE_TUNNEL_PRIVATE_GROUP_ID) {
+            if(datalen > 4) {
+                return XDP_DROP;
+            }
+
+            if(bpf_probe_read_kernel(vid, datalen, data) < 0) {
+                return XDP_DROP;
+            }
+
+            has_vid = 1;
+        }
+
+        if(has_username && has_vid) {
+            return XDP_PASS;
+        }
+
+        avps = ((void*)avps) + avps->length;
+    }
+
+    return XDP_PASS;
+}
+
+static int finalize_auth(__u8 *identity, __u8 *vid) {
+    struct pending_auth_sta_val *pendauthsta = bpf_map_lookup_elem(&pending_auth_sta, identity);
+    if(pendauthsta == NULL) {
+        return XDP_PASS;
+    }
+
+    struct authd_sta_val authdsta;
+    __builtin_memset(&authdsta, 0, sizeof(struct authd_sta_val));
+    authdsta.last_seen = bpf_ktime_get_boot_ns();
+    authdsta.current_iface = pendauthsta->iface;
+    authdsta.origin_iface = pendauthsta->iface;
+    __builtin_memcpy(authdsta.vlan_id, vid, 5);
+    authdsta.user_known = 0;
+    authdsta.supplicant_logoff = 0;
+
+    __u8 macaddr[6];
+    __builtin_memcpy(macaddr, pendauthsta->macaddr, 6);
+
+    if(bpf_map_delete_elem(&pending_auth_sta, identity) < 0) {
+        return XDP_DROP;
+    }
+
+    if(bpf_map_update_elem(&authd_sta, macaddr, &authdsta, BPF_NOEXIST) < 0) {
+        return XDP_DROP;
+    }
+
+    return XDP_PASS;
+}
+
+static int extract_radiushdr(struct ethhdr *frame, struct radiushdr **out, void *data_end) {
+    *out = NULL;
+
+    if(HAS_IP(frame)) {
+        struct iphdr *ip = (struct iphdr*) (((void*)frame) + sizeof(struct ethhdr));
+        if(((void*)ip) + sizeof(struct iphdr) > data_end) {
+            return XDP_DROP;
+        }
+
+        if(HAS_UDP(ip)) {
+            struct udphdr *udp = (struct udphdr*) (((void*)ip) + sizeof(struct iphdr));
+            if(((void*)udp) + sizeof(struct udphdr) > data_end) {
+                return XDP_DROP;
+            }
+
+            if(HAS_RADIUS(udp)) {
+                struct radiushdr *radius = (struct radiushdr*) (((void*)udp) + sizeof(struct udphdr));
+                if(((void*)radius) + sizeof(struct radiushdr) > data_end) {
+                    return XDP_DROP;
+                }
+
+                *out = radius;
+            }
+        }
+    }
+
+    return XDP_PASS;
+}
+
+SEC("xdp")
+int inspect_radius_frame(struct xdp_md* ctx) {
+    void *data_end = (void*)((__u64) ctx->data_end);
+    void *data = (void*)((__u64) ctx->data);
+
+    struct ethhdr *eth = data;
+    if(((void*)eth) + sizeof(struct ethhdr) > data_end) {
+        return XDP_DROP;
+    }
+
+    struct radiushdr *radius;
+    int rv = extract_radiushdr(eth, &radius, data_end);
+    if(radius == NULL) {
+        return rv;
+    }
+
+    if(radius->code == RADIUS_CODE_ACCESS_ACCEPT) {
+        struct radiusavphdr *avps = (struct radiusavphdr*) (((void*)radius) + sizeof(struct radiushdr));
+
+        __u8 username[CONFIG_MAX_IDENT_NAME_LEN];
+        __u8 vid[5];
+
+        __builtin_memset(username, 0, CONFIG_MAX_IDENT_NAME_LEN);
+        __builtin_memset(vid, 0, 5);
+
+        rv = parse_radius_avps(avps, username, vid, data_end);
+        if(username[0] == 0 || vid[0] == 0) {
+            return rv;
+        }
+
+        return finalize_auth(username, vid);
+    }
+
+    return XDP_PASS;
+}
+
+char LICENSE[] SEC("license") = "GPL";
+```
+
+ proj3-xdp/xdp_prog_user.c
+ 
+```c
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <errno.h>
+#include <time.h>
+#include <unistd.h>
+#include <linux/limits.h>
+#include <bpf/bpf.h>
+#include <net/if.h>
+
+#include "die.h"
+#include "shmapsdefs.h"
+
+//#define EXTENDED_SUPPORT
+
+#ifdef EXTENDED_SUPPORT
+#warning extended support is enabled
+#endif
+
+#define NANO_PER_SEC 1000000000LL
+
+#ifndef DEFAULT_DISCONNECT_AFTER_INACTIVITY_THR_SEC
+#define DEFAULT_DISCONNECT_AFTER_INACTIVITY_THR_SEC (10 * 60)
+#endif
+
+#ifndef DEFAULT_BPFFS_PATH
+#define DEFAULT_BPFFS_PATH "/sys/fs/bpf/xdp/globals"
+#endif
+
+#ifndef DEFAULT_EBPF_MAP
+#define DEFAULT_EBPF_MAP "authd_sta"
+#endif
+
+extern int optind;
+extern char* optarg;
+
+static char bpffs[PATH_MAX];
+static char ebpf_map_name[NAME_MAX];
+static __u64 disconnect_thr_ns;
+
+static int open_bpf_map_by_name() {
+    char full_map_path[PATH_MAX];
+    memset(full_map_path, 0, sizeof(full_map_path));
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-truncation"
+    snprintf(full_map_path, PATH_MAX, "%s/%s", bpffs, ebpf_map_name);
+#pragma GCC diagnostic pop
+
+    int fd = bpf_obj_get(full_map_path);
+    if(fd < 0) {
+        __die1(bpf_obj_get, full_map_path);
+    }
+
+    return fd;
+}
+
+static void load_bpffs(const char* path) {
+    memset(bpffs, 0, sizeof(bpffs));
+    strncpy(bpffs, path, sizeof(bpffs) - 1);
+}
+
+static void load_ebpf_map_name(const char* map_name) {
+    memset(ebpf_map_name, 0, sizeof(ebpf_map_name));
+    strncpy(ebpf_map_name, map_name, sizeof(ebpf_map_name) - 1);
+}
+
+static void load_disconnect_thr_ns(__u64 thr_sec) {
+    disconnect_thr_ns = thr_sec * NANO_PER_SEC;
+}
+
+static void print_program_settings() {
+    printf(" * BPF fs path: %s\n", bpffs);
+    printf(" * eBPF map: %s\n", ebpf_map_name);
+    printf(" * Station inactivity threshold: %lld secs\n", disconnect_thr_ns / NANO_PER_SEC);
+}
+
+static __u64 charp_to_ull(const char* s) {
+    errno = 0;
+    char * endp;
+    __u64 v = strtoull(s, &endp, 10);
+
+    if(errno == ERANGE) {
+        printf("number %s of out of range\n", s);
+        exit(EXIT_FAILURE);
+    }
+
+    if(endp == s || *endp != 0) {
+        printf("invalid number %s\n", s);
+        exit(EXIT_FAILURE);
+    }
+
+    return v;
+}
+
+static void event_polling(int);
+
+int main(int argc, char **argv) {
+    if(getuid() != 0) {
+        fputs("this program must be run as root\n", stderr);
+        return EXIT_FAILURE;
+    }
+
+    load_bpffs(DEFAULT_BPFFS_PATH);
+    load_ebpf_map_name(DEFAULT_EBPF_MAP);
+    load_disconnect_thr_ns(DEFAULT_DISCONNECT_AFTER_INACTIVITY_THR_SEC);
+
+    char optch;
+    while((optch = getopt(argc, argv, "p:m:t:")) != -1) {
+        if(optch == 'p') {
+            load_bpffs(optarg);
+        } else if(optch == 'm') {
+            load_ebpf_map_name(optarg);
+        } else if(optch == 't') {
+            load_disconnect_thr_ns(charp_to_ull(optarg));
+        }
+    }
+
+    print_program_settings();
+
+    int map_fd = open_bpf_map_by_name();
+    event_polling(map_fd);
+
+    //unreachable code
+    close(map_fd);
+    return EXIT_SUCCESS;
+}
+
+/* Event polling and policy enforcement */
+
+#define timespec_to_ns(ts) (((__u64)(ts).tv_sec) * NANO_PER_SEC + (ts).tv_nsec)
+
+#define NEED_TO_DENY_ACCESS(x) \
+    ((subtract_times(timespec_to_ns(now), (x).last_seen) > disconnect_thr_ns) || \
+    ((x).current_iface != (x).origin_iface) || \
+    ((x).supplicant_logoff))
+
+#define subtract_times(_ns_x, _ns_y) \
+    ((_ns_y) >= (_ns_x) ? 0 : (_ns_x) - (_ns_y))
+
+#define arrcmp(_x, _y, _sz) ({ \
+    int rv = 1; \
+    for(int i = 0; i < _sz; i++) { \
+        if(_x[i] != _y[i]) { \
+            rv = 0; \
+            break; \
+        } \
+    } \
+    rv; })
+
+#define DEFINE_IFNAME_FROM_IFINDEX(_ifnamevar, ifindex) \
+    char _ifnamevar[IF_NAMESIZE]; \
+    if(if_indextoname(ifindex, _ifnamevar) == NULL) { \
+        __die0(if_indextoname); \
+    }
+
+#define DEFINE_STRFTIME(_varn) \
+    char _varn[100]; \
+    __fmttime(_varn)
+
+#define CMDLINE_MAX 256
+
+static void run_command(const char* cmd) {
+    FILE *fp = popen(cmd, "r");
+    if(fp == NULL) {
+        __die0(popen);
+    }
+
+    int wstatus = pclose(fp);
+    if(wstatus == -1) {
+        __die0(pclose);
+    }
+
+    if(WIFEXITED(wstatus)) {
+        if(WEXITSTATUS(wstatus) != 0) {
+            fprintf(stderr, "command \"%s\" exited with exit code %d\n", cmd, WEXITSTATUS(wstatus));
+            exit(EXIT_FAILURE);
+        }
+    } else {
+        fprintf(stderr, "command \"%s\" did *not* exit()\n", cmd);
+        exit(EXIT_FAILURE);
+    }
+}
+
+static void allow_access(const __u8 *macaddr, const struct authd_sta_val *val) {
+    char cmdbuf[CMDLINE_MAX];
+    DEFINE_IFNAME_FROM_IFINDEX(ifname, val->origin_iface);
+
+#ifdef EXTENDED_SUPPORT
+    memset(cmdbuf, 0, CMDLINE_MAX);
+    snprintf(cmdbuf, CMDLINE_MAX, "bridge vlan del dev %s vid 95 pvid untagged", ifname);
+    run_command(cmdbuf);
+
+    memset(cmdbuf, 0, CMDLINE_MAX);
+    snprintf(cmdbuf, CMDLINE_MAX, "bridge vlan del dev %s vid 32 pvid untagged", ifname);
+    run_command(cmdbuf);
+#endif
+
+    memset(cmdbuf, 0, CMDLINE_MAX);
+    snprintf(cmdbuf, CMDLINE_MAX, "bridge vlan add dev %s vid %s pvid untagged", ifname, val->vlan_id);
+    run_command(cmdbuf);
+
+    memset(cmdbuf, 0, CMDLINE_MAX);
+    snprintf(cmdbuf, CMDLINE_MAX, "ebtables -A FORWARD -s %02X:%02X:%02X:%02X:%02X:%02X -j ACCEPT",
+        macaddr[0], macaddr[1], macaddr[2], macaddr[3], macaddr[4], macaddr[5]);
+    run_command(cmdbuf);
+}
+
+static void deny_access(const __u8 *macaddr, const struct authd_sta_val *val) {
+    char cmdbuf[CMDLINE_MAX];
+    DEFINE_IFNAME_FROM_IFINDEX(ifname, val->origin_iface);
+
+#ifndef EXTENDED_SUPPORT
+    memset(cmdbuf, 0, CMDLINE_MAX);
+    snprintf(cmdbuf, CMDLINE_MAX, "bridge vlan del dev %s vid %s pvid untagged", ifname, val->vlan_id);
+    run_command(cmdbuf);
+
+    memset(cmdbuf, 0, CMDLINE_MAX);
+    snprintf(cmdbuf, CMDLINE_MAX, "bridge vlan add dev %s vid 1 pvid untagged", ifname);
+    run_command(cmdbuf);
+#endif
+
+    memset(cmdbuf, 0, CMDLINE_MAX);
+    snprintf(cmdbuf, CMDLINE_MAX, "ebtables -D FORWARD -s %02X:%02X:%02X:%02X:%02X:%02X -j ACCEPT",
+        macaddr[0], macaddr[1], macaddr[2], macaddr[3], macaddr[4], macaddr[5]);
+    run_command(cmdbuf);
+}
+
+static void __fmttime(char buf[100]) {
+    memset(buf, 0, 100);
+
+    time_t raw;
+    time(&raw);
+
+    struct tm *timeinfo = localtime(&raw);
+    strftime(buf, 100, "%F %r", timeinfo);
+}
+
+static void __base_log(const char* evt, const __u8 *macaddr, const struct authd_sta_val *val) {
+    DEFINE_STRFTIME(nowtime);
+    DEFINE_IFNAME_FROM_IFINDEX(curiface, val->current_iface);
+    DEFINE_IFNAME_FROM_IFINDEX(origiface, val->origin_iface);
+
+    printf(
+            "[%s] %s access for %02X:%02X:%02X:%02X:%02X:%02X with vid %s,"
+            " origin iface: %s, current iface: %s,"
+            " logoff: %s\n",
+        nowtime, evt,
+        macaddr[0], macaddr[1], macaddr[2], macaddr[3],
+        macaddr[4], macaddr[5], val->vlan_id,
+        origiface, curiface,
+        val->supplicant_logoff ? "yes" : "no");
+}
+
+static void log_access_allowed(const __u8 *macaddr, const struct authd_sta_val *val) {
+    __base_log("allowed", macaddr, val);
+}
+
+static void log_access_denied(const __u8 *macaddr, const struct authd_sta_val *val) {
+    __base_log("denied", macaddr, val);
+}
+
+#ifdef EXTENDED_SUPPORT
+
+static void deny_access_to_sta_on_iface(int map, __u32 ifindex, __u8 *notkey) {
+    __u8 prev_key[6];
+    __u8 cur_key[6];
+    void *prev_key_ptr = NULL;
+
+    int rv;
+    while((rv = bpf_map_get_next_key(map, prev_key_ptr, cur_key)) == 0) {
+        struct authd_sta_val cur_val;
+
+        if(bpf_map_lookup_elem(map, cur_key, &cur_val) != 0) {
+            __die0(bpf_map_lookup_elem);
+        }
+
+        if(!arrcmp(notkey, cur_key, 6) && cur_val.current_iface == ifindex && cur_val.user_known) {
+            deny_access(cur_key, &cur_val);
+            if(bpf_map_delete_elem(map, cur_key) < 0) {
+                __die0(bpf_map_delete_elem);
+            }
+
+            log_access_denied(cur_key, &cur_val);
+            return;
+        }
+
+        memcpy(prev_key, cur_key, sizeof(__u8) * 6);
+        if(prev_key_ptr == NULL) {
+            prev_key_ptr = prev_key;
+        }
+    }
+
+    if(rv != -ENOENT) {
+        __die0(bpf_map_get_next_key);
+    }
+}
+
+#endif
+
+static void event_polling(int map) {
+    printf("starting event polling...\n");
+
+    while(1) {
+        struct timespec now;
+
+        if(clock_gettime(CLOCK_BOOTTIME, &now) < 0) {
+            __die0(clock_getttime);
+        }
+
+        __u8 prev_key[6];
+        __u8 cur_key[6];
+        void *prev_key_ptr = NULL;
+
+        int rv;
+        while((rv = bpf_map_get_next_key(map, prev_key_ptr, cur_key)) == 0) {
+            struct authd_sta_val cur_val;
+
+            if(bpf_map_lookup_elem(map, cur_key, &cur_val) != 0) {
+                __die0(bpf_map_lookup_elem);
+            }
+
+            if(NEED_TO_DENY_ACCESS(cur_val)) {
+#ifdef EXTENDED_SUPPORT
+                if(cur_val.origin_iface != cur_val.current_iface) {
+                    deny_access_to_sta_on_iface(map, cur_val.current_iface, cur_key);
+                }
+#endif
+                deny_access(cur_key, &cur_val);
+                if(bpf_map_delete_elem(map, cur_key) < 0) {
+                    __die0(bpf_map_delete_elem);
+                }
+
+                log_access_denied(cur_key, &cur_val);
+                continue;
+            }
+
+            if(!cur_val.user_known) {
+#ifdef EXTENDED_SUPPORT
+                deny_access_to_sta_on_iface(map, cur_val.current_iface, cur_key);
+#endif
+                allow_access(cur_key, &cur_val);
+                cur_val.user_known = 1;
+                if(bpf_map_update_elem(map, cur_key, &cur_val, 0) < 0) {
+                    __die0(bpf_map_update_elem);
+                }
+
+                log_access_allowed(cur_key, &cur_val);
+            }
+
+            memcpy(prev_key, cur_key, sizeof(__u8) * 6);
+            if(prev_key_ptr == NULL) {
+                prev_key_ptr = prev_key;
+            }
+        }
+
+        if(rv != -ENOENT) {
+            __die0(bpf_map_get_next_key);
+        }
+
+        sleep(5);
+    }
+}
+```
+
+ proj3-xdp/Makefile
+ 
+```Makefile
+# SPDX-License-Identifier: (GPL-2.0 OR BSD-2-Clause)
+
+XDP_PROG_KERN_EAPOL = xdp_prog_kern_eapol
+XDP_PROG_KERN_RADIUS = xdp_prog_kern_radius
+XDP_PROG_USER = xdp_prog_user
+
+XDP_TARGETS  := $(XDP_PROG_KERN_EAPOL) $(XDP_PROG_KERN_RADIUS)
+USER_TARGETS := $(XDP_PROG_USER)
+
+LIBBPF_DIR = ../libbpf/src/
+COMMON_DIR = ../common
+
+EXTRA_DEPS := $(COMMON_DIR)/parsing_helpers.h
+
+include $(COMMON_DIR)/common.mk
+
+# ---------------------------------
+# ---- ste's install commands -----
+# ---------------------------------
+
+SHELL=/bin/bash
+
+TARGET_IFACES_RADIUS ?= eth2
+
+install-xdp-radius: $(XDP_PROG_KERN_RADIUS).o
+        @for iface in $(TARGET_IFACES_RADIUS); do \
+                ip link set dev $${iface} xdp obj $(XDP_PROG_KERN_RADIUS).o sec xdp && \
+                        echo "[ OK ] RADIUS xdp program installed for $${iface}" || \
+                        echo "[ FAIL ] RADIUS xdp program **NOT** installed for $${iface}"; \
+        done
+
+TARGET_IFACES_EAPOL ?= eth0 eth1
+
+install-xdp-eapol: $(XDP_PROG_KERN_EAPOL).o
+        @for iface in $(TARGET_IFACES_EAPOL); do \
+                ip link set dev $${iface} xdp obj $(XDP_PROG_KERN_EAPOL).o sec xdp && \
+                        echo "[ OK ] EAPOL xdp program installed for $${iface}" || \
+                        echo "[ FAIL ] EAPOL xdp program **NOT** installed for $${iface}"; \
+        done
+
+install-xdp: install-xdp-eapol install-xdp-radius
+
+RM_TARGET_IFACES ?= $(TARGET_IFACES_RADIUS) $(TARGET_IFACES_EAPOL)
+
+remove-xdp-only:
+        @for iface in $(RM_TARGET_IFACES); do \
+                ip link set $${iface} xdp off && \
+                        echo "[ OK ] xdp program removed for $${iface}" || \
+                        echo "[ FAIL ] xdp program **NOT** removed for $${iface}"; \
+        done
+
+PINNED_MAPS_PATH ?= /sys/fs/bpf/xdp/globals
+RM_TARGET_MAPS ?= authd_sta pending_auth_sta
+
+remove-pinned-maps:
+        @for map in $(RM_TARGET_MAPS); do \
+                rm $(PINNED_MAPS_PATH)/$${map} && \
+                        echo "[ OK ] map $(PINNED_MAPS_PATH)/$${map} removed" || \
+                        echo "[ FAIL ] map $(PINNED_MAPS_PATH)/$${map} **NOT** removed"; \
+        done
+
+remove-xdp: remove-xdp-only remove-pinned-maps
+
+reinstall:
+        @make remove-xdp
+        @make install-xdp
+
+deep-reinstall:
+        @make clean
+        @make reinstall
+```
+
  * **client-B1**
 
  net.sh
