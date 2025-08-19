@@ -8,8 +8,6 @@ Anno accademico 2024/2025
 3. [Configurazione della VPN site 1](#configurazione-della-vpn-site-1)
 4. [Configurazione della VPN site 2](#configurazione-della-vpn-site-2)
 5. [Configurazione della VPN site 3](#configurazione-della-vpn-site-3)
-4. [Conclusioni](#conclusioni)
-
 
 ## Introduzione
 
@@ -23,7 +21,35 @@ che è l'authentication server.
 
 ## Configurazione della backbone (AS100)
 
+*Nota: per le conf. dei nodi è indicato il nome del file, prima del suo contenuto.*
+*Il nome è relativo a /root (per quanto riguarda i container) oppure alla directory project/scripts/nome-sito/nome-device*
+
  * **R101**
+
+**Configurazione FRR**
+
+Configurazione di IP sulle interfacce che connettono il provider edge agli altri router (CE-1 e LSR).
+
+Interfaccia di loopback utilizzata per resilienza ulteriore a guasti.
+
+OSPF come IGP funzionante nell'interfaccia che lo collega all'LSR.
+
+MPLS viene utilizzato come data plane della VPN, double encapsulation all'invio verso un'altro site, 
+in ricezione label più interna identifica VRF da utilizzare per la consegna 
+(non è il caso, ma che succede nel caso in cui il provider fornisce VPN a più customer?).
+
+MP-iBGP configurato tra i provider edge. Si tratta del control plane della VPN. 
+Le route distinguisher servono a distinguere le VPN 
+(come prima, non è questo il caso ma potrebbero essere serviti molteplici customer che 
+però fanno advertisement di stesse subnet verso uno stesso PE).
+
+Ancora più importante è il route target: per implementare la hub-and-spoke topology - manteniamo 
+tutte le connessioni tra i provider edge (MP-iBGP), ma gli diciamo quali rotte imparare.
+
+Questo provider edge esporta le rotte con route-target 100:1 e importa solo rt 100:2 (hub).
+
+La stessa cosa fa l'altro provider edge "agganciato" all'altro spoke: tutti e due importeranno solamente le rotte
+propagate dall'hub.
 
  frrconf
 
@@ -77,6 +103,11 @@ router bgp 100 vrf vpnA
   import vpn
 ```
 
+**Script di init**
+
+Eseguirlo per configurare la VRF associata alla vpnA nel kernel, 
+abilitare funzionalità MPLS e configurare FRR.
+
  net.sh
 
 ```bash
@@ -95,6 +126,27 @@ vtysh -f frrconf
 ```
 
  * **R102**
+
+**Configurazione di FRR**
+
+Configurazione del PE associato all'hub della VPN.
+
+Del tutto simile alla precedente, se non fosse che bisogna permettere 
+la spoke-to-spoke communication attraverso l'hub. 
+
+Le route target sono import 100:1 e export 100:2, 
+in altre parole importiamo da entrambi gli spoke 
+e esportiamo verso gli spoke (per come è configurata la rete).
+
+Redistribute kernel è necessario perchè la route di default è configurata con 
+il tool "ip" invece che con FRR che la vede come "K" ovvero, kernel. Questo permette
+l'esportazione di 0.0.0.0/0 verso gli spoke e quindi di abilitare la spoke-to-spoke.
+
+In particolare, avendo esportato la rotta 0.0.0.0/0 agli altri spoke, quando uno vuole
+parlare con l'altro, nelle rispettive VRF, osserverà che l'unico match è con 0.0.0.0/0
+che l'hub ha esportato, quindi inoltrano il pacchetto con IP.dest = dispositivo in altra 
+VPN site spoke all'hub che poi lo inoltra al CE hub che lo rimanda al PE hub. Il PE hub
+conosce tutte le rotte e quindi sa come inoltrarlo allo spoke di destinazione.
 
  frrconf
 
@@ -149,6 +201,12 @@ router bgp 100 vrf vpnA
   export vpn
 ```
 
+**Script di init**
+
+Eseguirlo per configurare la VRF associata alla vpnA nel kernel,
+abilitare funzionalità MPLS, configurare FRR e 
+installare default route verso l'hub per la VRF associata alla vpnA.
+
  net.sh
 
 ```bash
@@ -170,6 +228,14 @@ ip route add 0.0.0.0/0 via 10.0.0.5 vrf vpnA
 ```
 
  * **R103**
+
+**Configurazione di FRR**
+
+Configurazione identica a quella dell'altro spoke.
+
+Route target importa rotte 100:2 (hub) e esporta 100:1 (spoke).
+
+Finalizzando quindi la configurazione hub-and-spoke.
 
  frrconf
 
@@ -223,6 +289,11 @@ router bgp 100 vrf vpnA
   export vpn
 ```
 
+**Script di init**
+
+Eseguirlo per configurare la VRF associata alla vpnA nel kernel, 
+abilitare funzionalità MPLS e configurare FRR.
+
  net.sh
 
 ```bash
@@ -241,6 +312,12 @@ vtysh -f frrconf
 ```
 
  * **R104**
+
+**Configurazione di FRR**
+
+Configurazione del label switched router della rete. 
+Scambia le label più esterne dei frame MPLS e 
+ne effettua l'inoltro verso il prossimo router di competenza.
 
  frrconf
 
@@ -276,6 +353,10 @@ mpls ldp
   interface eth2
 ```
 
+**Script di init**
+
+Eseguirlo per configurare funzionalità MPLS nel kernel e FRR.
+
  net.sh
 
 ```bash
@@ -294,6 +375,11 @@ vtysh -f frrconf
 
  * **CE1**
 
+**Configurazione FRR**
+
+Viene configurato, in FRR, l'IPv4 su entrambe le interfacce e sopratutto il route advertisement
+automatico verso il provider edge (con BGP) della subnet della VPN site 1 (192.168.0.0/24).
+
  frrconf
 
 ```bash
@@ -310,6 +396,10 @@ router bgp 65000
  neighbor 10.0.0.2 remote-as 100
 ```
 
+**Script di init**
+
+Eseguirlo per iniziallizare FRR
+
  net.sh
 
 ```bash
@@ -320,6 +410,10 @@ vtysh -f frrconf
 
  * **client-A1**
 
+**Script di init**
+
+Eseguirlo per configurare IPv4 
+
  net.sh
 
 ```bash
@@ -328,6 +422,28 @@ vtysh -f frrconf
 ip addr add 192.168.0.2/24 dev eth0
 ip route add default via 192.168.0.1 dev eth0
 ```
+
+**Configurazione AppArmor come MAC**
+
+Sfruttiamo i profili di AppArmor per il MAC. Sono stati realizzati 6 profili.
+
+ * *usr.bin.cat*: che impedisce al programma cat di leggere file di autenticazione del sistema.
+
+ * *usr.bin.curl*: che impedisce a curl di scrivere file su qualsiasi directory che non sia /tmp (file eliminati al reboot) 
+   evitando di riempire il sistema con file inutili e mai più eliminati o utilizzati.
+
+ * *usr.bin.rm*: che impedisce all'utente di fare danni al sistema (ad esempio se viene eseguito uno script malevolo con UID=0)
+   impedendone l'accesso alle directory più importanti.
+
+ * *usr.bin.wireshark*, *usr.bin.zenmap*, *usr.bin.nmap*: le applicazioni non possono proprio essere caricate 
+   (default policy di AppArmor: deny e le regole sono vuote - deny all) vogliamo evitare scanning di qualsiasi tipo sulla rete.
+
+**Script di applicazione dei profili AppArmor**
+
+Eseguirlo per permettere ad AppArmor di memorizzare i profili nel kernel e impostare la enforcement mode 
+(le policy vengono effettivamente fatte rispettare, al contrario della complain mode, 
+dove vengono solo loggate le violazioni). Applica tutti i profili che
+trova nella sottodirectory "aaprofs"
 
  mac/apply-aaprofs.sh
 
@@ -455,6 +571,11 @@ cd ..
 
  * **CE2**
 
+**Configurazione FRR**
+
+Viene configurato, in FRR, l'IPv4 su entrambe le interfacce e sopratutto il route advertisement
+automatico verso il provider edge (con BGP) della subnet della VPN site 2 (192.168.2.0/24).
+
  frrconf
 
 ```bash
@@ -470,6 +591,34 @@ router bgp 65002
  network 192.168.2.0/24
  neighbor 10.0.0.10 remote-as 100
 ```
+
+**Script di init**
+
+Eseguirlo per iniziallizare FRR e configurare il router per le due VLAN.
+
+Le due VLAN sono VID=95 e VID=32.
+
+Le subnet associate ai due broadcast domain sono:
+
+ * 192.168.2.8/30
+
+ * 192.168.2.4/30
+
+La scelta di utilizzare due subnet con mask /30 è motivata:
+
+ * Non c'è bisogno di andare a modificare ulteriormente il CE per l'advertisement di rotte ulteriori
+
+ * Non si intasa il "namespace" della VPN (ogni site ha subnet 192.168.0.0/24, 192.168.1.0/24, ...)
+
+ * Di fatto i due dispositivi sono in VPN site 2, ha senso poterli "identificare" con 
+ IPv4 coerenti rispetto al "blocco" di indirizzi IP assegnato alla VPN site (e.g. se il blocco è 192.168.2.0/24, 
+ identificarlo come 192.168.2.6 è meglio, invece che 192.168.3.1 o 10.0.0.1)
+
+ * Longest prefix match - il router sa perfettamente identificare a quale subnet inoltrare
+
+Di contro, "togliamo" gli indirizzi delle subnet /30 alla subnet "principale" /24.
+
+Il resto è configurazione del trunk link, e assegnazione IP alle interfacce che supportano VLAN (router per queste ultime).
 
  net.sh
 
@@ -496,6 +645,19 @@ ip addr add $VLAN_32_IPADDR dev eth1.32
 ```
 
  * **RADIUS**
+
+**Script di init**
+
+Eseguirlo per configurare IPv4 e RADIUS.
+
+Il server di autenticazione è RADIUS ed è la classica config basata su MD5.
+
+Unica problematica riscontrata: il file "users" non veniva letto da freeradius, 
+è stato utilizzato il file "authorize" che invece viene correttamente aperto da
+freeradius, parsato e permette di convalidare l'auth request.
+
+Lo script copia comunque il file authorize sia come */etc/freeradius/3.0/users* 
+che come */etc/freeradius/3.0/mods-config/files/authorize*.
 
  net.sh
 
@@ -528,6 +690,8 @@ install -m444 authorize $INSTALLDIR/users
 freeradius $@
 ```
 
+**Identificazione del client RADIUS (switch)**
+
  clients.conf
 
 ```bash
@@ -538,7 +702,11 @@ client vs2switch {
 }
 ```
 
- authorize
+**Identificazione dei client finali da autenticare (supplicants)**
+
+Di particolare importanza è il Tunnel-Private-Group-ID che è la VLAN id da assegnare.
+
+ authorize (*aka users*)
 
 ```bash
 clientb1 Cleartext-Password := "clientb1passwd"
@@ -558,6 +726,11 @@ clientb2 Cleartext-Password := "clientb2passwd"
 
  * **CE3**
 
+**Configurazione FRR**
+
+Viene configurato, in FRR, l'IPv4 su entrambe le interfacce e sopratutto il route advertisement
+automatico verso il provider edge (con BGP) della subnet della VPN site 3 (192.168.1.0/24).
+
  frrconf
 
 ```bash
@@ -574,6 +747,10 @@ router bgp 65001
  neighbor 10.0.0.6 remote-as 100
 ```
 
+**Script di init**
+
+Eseguirlo per iniziallizare FRR
+
  net.sh
 
 ```bash
@@ -583,6 +760,35 @@ vtysh -f frrconf
 ```
 
  * **switch**
+
+**Script di init**
+
+Eseguirlo per configurare lo switch.
+
+ 1. Vengono eseguiti i comandi classici per la configurazione dello switch classico con capability di VLAN filtering.
+
+ 2. Vengono aggiunte le VLAN ID (95,32 tagged) per il trunk link
+
+ 3. Viene aggiunta la VLAN ID 10 untagged sul trunk link (untagged)
+
+ 4. Viene aggiunto un nuovo dispositivo virtuale "auth.bridge0.10" a partire dal dispositivo "bridge0", a cui viene assegnata come
+ route di default 192.168.2.1 (il CE)
+
+ 5. Con ebtables si blocca da subito ogni tipologia di forwarding, tranne per eth2.
+
+ 6. Installa la conf. di hostapd
+
+Il nuovo dispositivo virtuale "auth.bridge0.10" è necessario per permettere a hostapd di comunicare con il server RADIUS e allo
+stesso tempo permettere allo switch di agire da... switch, nel senso che sul link fisico eth2 devono passare sia le req/resp RADIUS
+che il forwarding dei frame VLAN (trunk link) verso il CE da parte dei dispositivi client.
+
+In eth2 la PVID untagged è 10, l'interfaccia "auth.bridge0.10" 
+è di fatto utilizzata da hostapd, ha IPv4 192.168.2.2 e route di default 192.168.2.1
+
+I frame EAPOL devono poter passare per permettere l'autenticazione. 
+I frame EAPOL hanno come destinazione PAE / Nearest-non-TPMR-bridge - lo switch fa da autenticatore ma 
+non può avere un vero e proprio indirizzo MAC - su questo effettua le operazioni di switching, 
+ma i frame di auth 802.1x/EAPOL sono diretti proprio verso lo switch che fa da authenticator.
 
  net.sh
 
@@ -672,6 +878,12 @@ auth_server_port=1812
 auth_server_shared_secret=mysecretpasswd
 ```
 
+**Programma eBPF/XDP**
+
+*Nota: nel container, la directory proj3-xdp/ si trova dentro la directory /root/xdp-tutorial/*
+
+**Header di configurazione**
+
  proj3-xdp/config.h
 
 ```c
@@ -691,6 +903,8 @@ auth_server_shared_secret=mysecretpasswd
 
 #endif
 ```
+
+**Header di macro __die**
 
  proj3-xdp/die.h
  
@@ -712,6 +926,8 @@ auth_server_shared_secret=mysecretpasswd
 
 #endif
 ```
+
+**Header di defs per EAPOL**
 
  proj3-xdp/eapol.h
 
@@ -743,6 +959,8 @@ struct eapdata {
 
 #endif
 ```
+
+**Header per le mappe**
 
  proj3-xdp/maps.h
  
@@ -780,6 +998,8 @@ struct {
 
 #endif
 ```
+
+**Header per le defs. RADIUS**
 
  proj3-xdp/radius.h
 
@@ -821,6 +1041,8 @@ struct radiusavphdr {
 #endif
 ```
 
+**Header per value mappa utilizzato anche dal programma user**
+
  proj3-xdp/shmapsdefs.h
  
 ```c
@@ -838,6 +1060,8 @@ struct authd_sta_val {
 
 #endif
 ```
+
+**Sorgente C programma XDP EAPOL**
 
  proj3-xdp/xdp_prog_kern_eapol.c
 
@@ -987,6 +1211,8 @@ int inspect_eapol_frame(struct xdp_md* ctx) {
 char LICENSE[] SEC("license") = "GPL";
 
 ```
+
+**Sorgente C programma XDP RADIUS**
 
  proj3-xdp/xdp_prog_kern_radius.c
  
@@ -1152,6 +1378,8 @@ int inspect_radius_frame(struct xdp_md* ctx) {
 
 char LICENSE[] SEC("license") = "GPL";
 ```
+
+**Sorgente C programma utente**
 
  proj3-xdp/xdp_prog_user.c
  
@@ -1521,6 +1749,8 @@ static void event_polling(int map) {
 }
 ```
 
+**Makefile**
+
  proj3-xdp/Makefile
  
 ```Makefile
@@ -1598,6 +1828,10 @@ deep-reinstall:
 
  * **client-B1**
 
+**Script di init**
+
+Eseguirlo per configurare IPv4 e copiare file di config di wpa_supplicant
+
  net.sh
 
 ```bash
@@ -1639,7 +1873,12 @@ wpa_supplicant -B -c/etc/wpa_supplicant.conf -Dwired -ieth0
 
  * **client-B2**
 
+**Script di init**
+
+Eseguirlo per configurare IPv4 e copiare file di config di wpa_supplicant
+
  net.sh
+
 ```bash
 #!/bin/bash
 
@@ -1657,6 +1896,7 @@ install -D -m400 wpa_supplicant.conf $INSTALLDIR/wpa_supplicant.conf
 ```
 
  wpa_supplicant.conf
+
 ```bash
 ap_scan=0
 network={
@@ -1669,10 +1909,9 @@ network={
 ```
 
  wpa_supplicant.sh
+
 ```bash
 #!/bin/bash
 
 wpa_supplicant -B -c/etc/wpa_supplicant.conf -Dwired -ieth0
 ```
-
-## Conclusioni
