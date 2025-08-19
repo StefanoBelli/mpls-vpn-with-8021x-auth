@@ -1,5 +1,6 @@
 # Progetto #3 del corso di Network and System Defense
 Stefano Belli, matricola 0350116
+
 Anno accademico 2024/2025
 
 ## Indice
@@ -22,7 +23,10 @@ che è l'authentication server.
 ## Configurazione della backbone (AS100)
 
 *Nota: per le conf. dei nodi è indicato il nome del file, prima del suo contenuto.*
-*Il nome è relativo a /root (per quanto riguarda i container) oppure alla directory project/scripts/nome-sito/nome-device*
+
+*Il nome è relativo a /root per quanto riguarda i container, oppure alla directory del dump degli script: project/scripts/nome-sito/nome-device*
+
+*I nomi dei dispositivi e dei sites sono in lowercase sia nella topologia che nella directory del dump degli script.*
 
  * **R101**
 
@@ -36,20 +40,20 @@ OSPF come IGP funzionante nell'interfaccia che lo collega all'LSR.
 
 MPLS viene utilizzato come data plane della VPN, double encapsulation all'invio verso un'altro site, 
 in ricezione label più interna identifica VRF da utilizzare per la consegna 
-(non è il caso, ma che succede nel caso in cui il provider fornisce VPN a più customer?).
+(non è il caso, ma che succede se in cui il provider fornisce VPN a più customer e questi usano stessi IP per le subnet?).
 
 MP-iBGP configurato tra i provider edge. Si tratta del control plane della VPN. 
+
 Le route distinguisher servono a distinguere le VPN 
-(come prima, non è questo il caso ma potrebbero essere serviti molteplici customer che 
-però fanno advertisement di stesse subnet verso uno stesso PE).
+(come prima, non è questo il caso ma potrebbero essere serviti molteplici customer).
 
 Ancora più importante è il route target: per implementare la hub-and-spoke topology - manteniamo 
-tutte le connessioni tra i provider edge (MP-iBGP), ma gli diciamo quali rotte imparare.
+tutte le connessioni tra i provider edge (MP-iBGP), ma filtriamo le rotte da imparare.
 
-Questo provider edge esporta le rotte con route-target 100:1 e importa solo rt 100:2 (hub).
+Questo provider edge esporta le rotte con route-target 100:1 e importa solo rt 100:2 (PE hub), è uno spoke.
 
-La stessa cosa fa l'altro provider edge "agganciato" all'altro spoke: tutti e due importeranno solamente le rotte
-propagate dall'hub.
+La stessa cosa fa l'altro provider edge spoke: tutti e due importeranno solamente le rotte
+diffuse dal PE hub.
 
  frrconf
 
@@ -135,18 +139,23 @@ Del tutto simile alla precedente, se non fosse che bisogna permettere
 la spoke-to-spoke communication attraverso l'hub. 
 
 Le route target sono import 100:1 e export 100:2, 
-in altre parole importiamo da entrambi gli spoke 
-e esportiamo verso gli spoke (per come è configurata la rete).
+in altre parole importiamo rotte da entrambi gli spoke 
+e esportiamo le nostre verso gli spoke (per come è configurata la rete).
 
 Redistribute kernel è necessario perchè la route di default è configurata con 
-il tool "ip" invece che con FRR che la vede come "K" ovvero, kernel. Questo permette
-l'esportazione di 0.0.0.0/0 verso gli spoke e quindi di abilitare la spoke-to-spoke.
+il tool "ip" invece che con FRR, che la vede come "K", ovvero, kernel. Questo permette
+l'esportazione di 0.0.0.0/0 verso gli spoke e quindi di abilitare la spoke-to-spoke comm
+"through the hub" (0.0.0.0/0 via CE dell'hub).
 
 In particolare, avendo esportato la rotta 0.0.0.0/0 agli altri spoke, quando uno vuole
-parlare con l'altro, nelle rispettive VRF, osserverà che l'unico match è con 0.0.0.0/0
-che l'hub ha esportato, quindi inoltrano il pacchetto con IP.dest = dispositivo in altra 
-VPN site spoke all'hub che poi lo inoltra al CE hub che lo rimanda al PE hub. Il PE hub
-conosce tutte le rotte e quindi sa come inoltrarlo allo spoke di destinazione.
+parlare con l'altro, nelle rispettive VRF, osserverà che l'unico match dell'IP.dest 
+nelle routing tables è con 0.0.0.0/0 che l'hub ha esportato 
+(gli spoke conoscono solo le rotte esportate dall'hub e quella del "CE associato" tramite
+route advertisement automatice CE-PE)
+quindi inoltrano il pacchetto con IP.dest = "dispositivo in altra VPN site spoke"
+al PE hub che poi lo inoltra al CE dell'hub che lo rimanda al PE hub. 
+
+Il PE hub conosce tutte le rotte e quindi sa come inoltrarlo allo spoke di destinazione.
 
  frrconf
 
@@ -205,7 +214,7 @@ router bgp 100 vrf vpnA
 
 Eseguirlo per configurare la VRF associata alla vpnA nel kernel,
 abilitare funzionalità MPLS, configurare FRR e 
-installare default route verso l'hub per la VRF associata alla vpnA.
+installare default route verso il CE dell'hub per la VRF associata alla vpnA.
 
  net.sh
 
@@ -231,9 +240,11 @@ ip route add 0.0.0.0/0 via 10.0.0.5 vrf vpnA
 
 **Configurazione di FRR**
 
+Si tratta di un PE spoke.
+
 Configurazione identica a quella dell'altro spoke.
 
-Route target importa rotte 100:2 (hub) e esporta 100:1 (spoke).
+Route target importa rotte 100:2 (PE hub) e esporta 100:1 (PE spoke).
 
 Finalizzando quindi la configurazione hub-and-spoke.
 
@@ -316,6 +327,7 @@ vtysh -f frrconf
 **Configurazione di FRR**
 
 Configurazione del label switched router della rete. 
+
 Scambia le label più esterne dei frame MPLS e 
 ne effettua l'inoltro verso il prossimo router di competenza.
 
