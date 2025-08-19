@@ -894,6 +894,109 @@ auth_server_shared_secret=mysecretpasswd
 
 *Nota: nel container, la directory proj3-xdp/ si trova dentro la directory /root/xdp-tutorial/*
 
+**Breve spiegazione del funzionamento**
+
+Abbiamo due programmi XDP: uno per "EAPOL" e uno per "RADIUS" e il programma utente.
+
+Il programma XDP EAPOL in realtà tiene anche conto della visibilità della stazione: nel senso che
+tiene traccia, una volta autenticata, quando è l'ultima volta che ha inviato un pacchetto attraverso
+l'interfaccia di competenza, oltre a gestire la fase iniziale di autenticazione (EAPOL/EAP). 
+Viene installato su eth0, eth1.
+
+Il programma XDP RADIUS parsa, sull'interfaccia che collega lo switch al router, appunto, i messaggi RADIUS,
+e in particolare i messaggi di accept. Viene installato su eth2.
+
+La situazione è la seguente:
+
+ * hostapd è in esecuzione sullo switch e implementa 802.1x/EAPOL e comunica con RADIUS
+
+ * I programmi XDP sono in esecuzione sulle interfacce
+
+Quando un client vuole autenticarsi, invia una richiesta EAPOL-Start allo switch (PAE).
+
+Prima o poi il client deve inviare una "Response, Identity" che viene intercettata dal programma XDP EAPOL.
+
+Prima di continuare, è opportuno precisare che l'unico modo sicuro per correlare le richieste EAPOL 
+alle risposte di Accept di RADIUS è tramite l'identità a causa del fatto che lo switch forwarda su 
+tutte le porte le richieste EAPOL: questo significa che tutti i client che hanno in esecuzione wpa_supplicant
+inizieranno un processo di auth con stesso ID EAP dell'originale. Usare l'ID EAP nei messaggi EAP 
+incapsulati da RADIUS, non è quindi possibile, per comprendere se l'auth è avvenuta con successo.
+
+L'identità è sicura da usare:
+
+ * I messaggi RADIUS Access-Accept contengono l'identità
+
+ * una sola stazione ha l'identità specifica
+ 
+ * una sola stazione su una sola interfaccia può usare quella identità
+
+Il messaggio RADIUS Access-Reject viene ignorato, finchè non si riscontra un messaggio RADIUS Access-Accept 
+corrispondente a quello EAPOL (sempre matchando l'identità), l'autenticazione della stazione rimane pendente, 
+dopo un tot di tempo che la richiesta di auth rimane pendente (1 minuto), quest'ultima viene eliminata.
+
+E' accettabile che vengano fatte ulteriori richieste, che sostituiscono la precedente, pendente, solo dalla
+stessa interfaccia da cui è stata generata quest'ultima.
+
+Una volta che il messaggio Access-Accept viene riscontrato, si elimina la entry nella mappa dell'auth pending,
+se ne crea una nuova in quella delle stazioni autenticate e ogni ulteriore richiesta di autenticazione 
+della stazione viene ignorata. 
+
+Il programma user effettua polling sulla mappa pinnata e rileva una nuova entry,
+che ancora non ha gestito, di stazione autenticata. Quindi esegue bridge vlan e ebtables per permettere 
+l'accesso alla LAN alla stazione: dalla mappa delle stazioni autenticate c'è la VLAN ID e il MAC della stazione,
+quindi flagga l'entry come "user_known". 
+
+Ogni 5 secondi il programma userspace effettua una scansione lineare
+sulla mappa e capisce cosa deve fare.
+
+Il programma userspace viene informato dal programma XDP (sempre tramite polling):
+
+ * Se la stazione ha inviato il frame EAPOL-Logoff
+
+ * Quanto tempo fa la stazione ha trasmesso un pacchetto
+
+ * Se la stazione ha cambiato interfaccia
+
+Quando il programma XDP sulle interfacce eth0, eth1 rilevano la prima o la terza condizione,
+bloccano il traffico (XDP_DROP) per permettere all'user program di agire: impedire l'accesso alla rete in modo definitivo
+con ebtables e bridge vlan e rimuovere la entry dalla mappa eBPF.
+
+Il secondo caso è completamente a discrezione del programma user - il programma XDP segnala solamente quand'è che
+ha visto l'ultima volta pacchetti sull'interfaccia da quella stazione, l'user decide quando reputare la stazione disconnessa,
+ovvero quando è l'ultima volta che ha trasmesso un pacchetto, e agisce di conseguenza come nel punto precedente.
+
+In realtà, di default il supporto per il rilevamento del fatto che la stazione ha cambiato interfaccia è acerbo, può dare problemi
+se si scambiano le interfacce delle due stazioni in certi interleaving, ma in più è stato implementato un supporto 
+migliore (comunque "sperimentale"), che si può abilitare decommentando 
+la linea "//#define EXTENDED_SUPPORT" nel file sorgente C del programma utente. 
+
+In ogni caso, l' "allow" da parte del programma utente consiste nell'aggiungere la regola -A FORWARD -s {mac} -j ACCEPT a ebtables,
+assegnare il PVID (estratto dal messaggio RADIUS) untagged con bridge vlan sull'interfaccia, e il deny consiste in una regola
+-D FORWARD -s {mac} -j ACCEPT con ebtables (eliminando la regola installata prima) e il ripristino del PVID untagged 1 sull'interfaccia,
+eliminando quello installato prima.
+
+**Breve guida all'utilizzo**
+
+ * Eseguire lo script "/root/net.sh"
+
+ * Da tmux, aprire due terminali, in uno, eseguire "/root/hostapd.sh"
+
+ * Nell'altro terminale, entrare in "/root/xdp-tutorial/proj3-xdp" (è necessario che "proj3-xdp" sia in "xdp-tutorial" perchè fa affidamento sui suoi Makefile)
+
+ * Eseguire make clean
+ 
+ * Eseguire make
+
+ * Eseguire make install-xdp
+
+ * Eseguire ./xdp_prog_user
+
+Quando non è più necessario,
+
+ * Terminare il programma utente con CTRL+C
+
+ * Eseguire make remove-xdp per disinstallare il programma XDP e rimuovere le mappe pinnate
+
 **Header di configurazione**
 
 ###### `proj3-xdp/config.h`
