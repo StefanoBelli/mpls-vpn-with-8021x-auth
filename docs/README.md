@@ -55,7 +55,7 @@ Questo provider edge esporta le rotte con route-target 100:1 e importa solo rt 1
 La stessa cosa fa l'altro provider edge spoke: tutti e due importeranno solamente le rotte
 diffuse dal PE hub.
 
- frrconf
+###### `frrconf`
 
 ```bash
 interface eth0
@@ -112,7 +112,7 @@ router bgp 100 vrf vpnA
 Eseguirlo per configurare la VRF associata alla vpnA nel kernel, 
 abilitare funzionalità MPLS e configurare FRR.
 
- net.sh
+###### `net.sh`
 
 ```bash
 #!/bin/bash
@@ -157,7 +157,7 @@ al PE hub che poi lo inoltra al CE dell'hub che lo rimanda al PE hub.
 
 Il PE hub conosce tutte le rotte e quindi sa come inoltrarlo allo spoke di destinazione.
 
- frrconf
+###### `frrconf`
 
 ```bash
 interface eth1
@@ -216,7 +216,7 @@ Eseguirlo per configurare la VRF associata alla vpnA nel kernel,
 abilitare funzionalità MPLS, configurare FRR e 
 installare default route verso il CE dell'hub per la VRF associata alla vpnA.
 
- net.sh
+###### `net.sh`
 
 ```bash
 #!/bin/bash
@@ -248,7 +248,7 @@ Route target importa rotte 100:2 (PE hub) e esporta 100:1 (PE spoke).
 
 Finalizzando quindi la configurazione hub-and-spoke.
 
- frrconf
+###### `frrconf`
 
 ```bash
 interface eth1
@@ -305,7 +305,7 @@ router bgp 100 vrf vpnA
 Eseguirlo per configurare la VRF associata alla vpnA nel kernel, 
 abilitare funzionalità MPLS e configurare FRR.
 
- net.sh
+###### `net.sh`
 
 ```bash
 #!/bin/bash
@@ -331,7 +331,7 @@ Configurazione del label switched router della rete.
 Scambia le label più esterne dei frame MPLS e 
 ne effettua l'inoltro verso il prossimo router di competenza.
 
- frrconf
+###### `frrconf`
 
 ```bash
 interface eth0
@@ -369,7 +369,7 @@ mpls ldp
 
 Eseguirlo per configurare funzionalità MPLS nel kernel e FRR.
 
- net.sh
+###### `net.sh`
 
 ```bash
 #!/bin/bash
@@ -392,7 +392,7 @@ vtysh -f frrconf
 Viene configurato, in FRR, l'IPv4 su entrambe le interfacce e sopratutto il route advertisement
 automatico verso il provider edge (con BGP) della subnet della VPN site 1 (192.168.0.0/24).
 
- frrconf
+###### `frrconf`
 
 ```bash
 interface eth0
@@ -412,7 +412,7 @@ router bgp 65000
 
 Eseguirlo per iniziallizare FRR
 
- net.sh
+###### `net.sh`
 
 ```bash
 #!/bin/bash
@@ -426,7 +426,7 @@ vtysh -f frrconf
 
 Eseguirlo per configurare IPv4 
 
- net.sh
+###### `net.sh`
 
 ```bash
 #!/bin/bash
@@ -457,7 +457,7 @@ Eseguirlo per permettere ad AppArmor di memorizzare i profili nel kernel e impos
 dove vengono solo loggate le violazioni). Applica tutti i profili che
 trova nella sottodirectory "aaprofs"
 
- mac/apply-aaprofs.sh
+###### `mac/apply-aaprofs.sh`
 
 ```bash
 #!/bin/bash
@@ -486,7 +486,7 @@ echo "Exiting directory $PROFSDIR..."
 cd ..
 ```
 
- mac/aaprofs/usr.bin.cat
+###### `mac/aaprofs/usr.bin.cat`
 
 ```
 #include <tunables/global>
@@ -507,7 +507,7 @@ cd ..
 }
 ```
 
- mac/aaprofs/usr.bin.curl
+###### `mac/aaprofs/usr.bin.curl`
 
 ```
 #include <tunables/global>
@@ -526,7 +526,7 @@ cd ..
 }
 ```
 
- mac/aaprofs/usr.bin.nmap
+###### `mac/aaprofs/usr.bin.nmap`
 
 ```
 /usr/bin/nmap {
@@ -534,7 +534,7 @@ cd ..
 }
 ```
 
- mac/aaprofs/usr.bin.rm
+###### `mac/aaprofs/usr.bin.rm`
 
 ```
 #include <tunables/global>
@@ -563,7 +563,7 @@ cd ..
 }
 ```
 
- mac/aaprofs/usr.bin.wireshark
+###### `mac/aaprofs/usr.bin.wireshark`
 
 ```
 /usr/bin/wireshark {
@@ -571,7 +571,7 @@ cd ..
 }
 ```
 
- mac/aaprofs/usr.bin.zenmap
+###### `mac/aaprofs/usr.bin.zenmap`
 
 ```
 /usr/bin/zenmap {
@@ -588,7 +588,7 @@ cd ..
 Viene configurato, in FRR, l'IPv4 su entrambe le interfacce e sopratutto il route advertisement
 automatico verso il provider edge (con BGP) della subnet della VPN site 2 (192.168.2.0/24).
 
- frrconf
+###### `frrconf`
 
 ```bash
 interface eth0
@@ -632,7 +632,7 @@ Di contro, "togliamo" gli indirizzi delle subnet /30 alla subnet "principale" /2
 
 Il resto è configurazione del trunk link, e assegnazione IP alle interfacce che supportano VLAN (router per queste ultime).
 
- net.sh
+###### `net.sh`
 
 ```bash
 #!/bin/bash
@@ -671,7 +671,7 @@ freeradius, parsato e permette di convalidare l'auth request.
 Lo script copia comunque il file authorize sia come */etc/freeradius/3.0/users* 
 che come */etc/freeradius/3.0/mods-config/files/authorize*.
 
- net.sh
+###### `net.sh`
 
 ```bash
 #!/bin/bash
@@ -694,7 +694,7 @@ install -D -m444 authorize $INSTALLDIR/mods-config/files/authorize
 install -m444 authorize $INSTALLDIR/users
 ```
 
- radius.sh
+###### `radius.sh`
 
 ```bash
 #!/bin/bash
@@ -704,7 +704,7 @@ freeradius $@
 
 **Identificazione del client RADIUS (switch)**
 
- clients.conf
+###### `clients.conf`
 
 ```bash
 client vs2switch {
@@ -718,7 +718,7 @@ client vs2switch {
 
 Di particolare importanza è il Tunnel-Private-Group-ID che è la VLAN id da assegnare.
 
- authorize (*aka users*)
+###### `authorize (aka users)`
 
 ```bash
 clientb1 Cleartext-Password := "clientb1passwd"
@@ -743,7 +743,7 @@ clientb2 Cleartext-Password := "clientb2passwd"
 Viene configurato, in FRR, l'IPv4 su entrambe le interfacce e sopratutto il route advertisement
 automatico verso il provider edge (con BGP) della subnet della VPN site 3 (192.168.1.0/24).
 
- frrconf
+###### `frrconf`
 
 ```bash
 interface eth0
@@ -763,7 +763,7 @@ router bgp 65001
 
 Eseguirlo per iniziallizare FRR
 
- net.sh
+###### `net.sh`
 
 ```bash
 #!/bin/bash
@@ -802,7 +802,7 @@ I frame EAPOL hanno come destinazione PAE / Nearest-non-TPMR-bridge - lo switch 
 non può avere un vero e proprio indirizzo MAC - su questo effettua le operazioni di switching, 
 ma i frame di auth 802.1x/EAPOL sono diretti proprio verso lo switch che fa da authenticator.
 
- net.sh
+###### `net.sh`
 
 ```bash
 #!/bin/bash
@@ -842,7 +842,7 @@ INSTALLDIR=/etc/hostapd
 install -D -m600 hostapd.conf $INSTALLDIR/hostapd.conf
 ```
 
- hostapd.sh
+###### `hostapd.sh`
 
 ```bash
 #!/bin/bash
@@ -850,7 +850,7 @@ install -D -m600 hostapd.conf $INSTALLDIR/hostapd.conf
 hostapd -d /etc/hostapd/hostapd.conf
 ```
 
- hostapd.conf
+###### `hostapd.conf`
 
 ```bash
 # Control interface settings
@@ -896,7 +896,7 @@ auth_server_shared_secret=mysecretpasswd
 
 **Header di configurazione**
 
- proj3-xdp/config.h
+###### `proj3-xdp/config.h`
 
 ```c
 #ifndef CONFIG_H
@@ -918,7 +918,7 @@ auth_server_shared_secret=mysecretpasswd
 
 **Header di macro __die**
 
- proj3-xdp/die.h
+###### `proj3-xdp/die.h`
  
 ```c
 #ifndef DIE_H
@@ -941,7 +941,7 @@ auth_server_shared_secret=mysecretpasswd
 
 **Header di defs per EAPOL**
 
- proj3-xdp/eapol.h
+###### `proj3-xdp/eapol.h`
 
 ```c
 #ifndef EAPOL_H
@@ -974,7 +974,7 @@ struct eapdata {
 
 **Header per le mappe**
 
- proj3-xdp/maps.h
+###### `proj3-xdp/maps.h`
  
 ```c
 #ifndef MAPS_H
@@ -1013,7 +1013,7 @@ struct {
 
 **Header per le defs. RADIUS**
 
- proj3-xdp/radius.h
+###### `proj3-xdp/radius.h`
 
 ```c
 #ifndef RADIUS_H
@@ -1055,7 +1055,7 @@ struct radiusavphdr {
 
 **Header per value mappa utilizzato anche dal programma user**
 
- proj3-xdp/shmapsdefs.h
+###### `proj3-xdp/shmapsdefs.h`
  
 ```c
 #ifndef SHMAPSDEFS_H
@@ -1075,7 +1075,7 @@ struct authd_sta_val {
 
 **Sorgente C programma XDP EAPOL**
 
- proj3-xdp/xdp_prog_kern_eapol.c
+###### `proj3-xdp/xdp_prog_kern_eapol.c`
 
 ```c
 #include <linux/bpf.h>
@@ -1226,7 +1226,7 @@ char LICENSE[] SEC("license") = "GPL";
 
 **Sorgente C programma XDP RADIUS**
 
- proj3-xdp/xdp_prog_kern_radius.c
+###### `proj3-xdp/xdp_prog_kern_radius.c`
  
 ```c
 #include <linux/bpf.h>
@@ -1393,7 +1393,7 @@ char LICENSE[] SEC("license") = "GPL";
 
 **Sorgente C programma utente**
 
- proj3-xdp/xdp_prog_user.c
+###### `proj3-xdp/xdp_prog_user.c`
  
 ```c
 #include <stdio.h>
@@ -1763,7 +1763,7 @@ static void event_polling(int map) {
 
 **Makefile**
 
- proj3-xdp/Makefile
+###### `proj3-xdp/Makefile`
  
 ```Makefile
 # SPDX-License-Identifier: (GPL-2.0 OR BSD-2-Clause)
@@ -1844,7 +1844,7 @@ deep-reinstall:
 
 Eseguirlo per configurare IPv4 e copiare file di config di wpa_supplicant
 
- net.sh
+###### `net.sh`
 
 ```bash
 #!/bin/bash
@@ -1862,7 +1862,7 @@ INSTALLDIR=/etc
 install -D -m400 wpa_supplicant.conf $INSTALLDIR/wpa_supplicant.conf
 ```
 
- wpa_supplicant.conf
+###### `wpa_supplicant.conf`
 
 ```bash
 ap_scan=0
@@ -1875,7 +1875,7 @@ network={
 }
 ```
 
- wpa_supplicant.sh
+###### `wpa_supplicant.sh`
 
 ```bash
 #!/bin/bash
@@ -1889,7 +1889,7 @@ wpa_supplicant -B -c/etc/wpa_supplicant.conf -Dwired -ieth0
 
 Eseguirlo per configurare IPv4 e copiare file di config di wpa_supplicant
 
- net.sh
+###### `net.sh`
 
 ```bash
 #!/bin/bash
@@ -1907,7 +1907,7 @@ INSTALLDIR=/etc
 install -D -m400 wpa_supplicant.conf $INSTALLDIR/wpa_supplicant.conf
 ```
 
- wpa_supplicant.conf
+###### `wpa_supplicant.conf`
 
 ```bash
 ap_scan=0
@@ -1920,7 +1920,7 @@ network={
 }
 ```
 
- wpa_supplicant.sh
+###### `wpa_supplicant.sh`
 
 ```bash
 #!/bin/bash
