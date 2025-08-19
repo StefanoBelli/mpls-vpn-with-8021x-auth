@@ -579,58 +579,34 @@ cd ..
 }
 ```
 
-## Configurazione della VPN site 2
+## Configurazione della VPN site 3
 
- * **CE2**
+ * **CE3**
 
 **Configurazione FRR**
 
 Viene configurato, in FRR, l'IPv4 su entrambe le interfacce e sopratutto il route advertisement
-automatico verso il provider edge (con BGP) della subnet della VPN site 2 (192.168.2.0/24).
+automatico verso il provider edge (con BGP) della subnet della VPN site 3 (192.168.1.0/24).
 
 #### `frrconf`
 
 ```bash
 interface eth0
- ip address 10.0.0.9/30
+ ip address 10.0.0.5/30
 
 interface eth1
- ip address 192.168.2.1/24
+ ip address 192.168.1.1/24
 
-ip route 0.0.0.0/0 10.0.0.10
+ip route 0.0.0.0/0 10.0.0.6
 
-router bgp 65002
- network 192.168.2.0/24
- neighbor 10.0.0.10 remote-as 100
+router bgp 65001
+ network 192.168.1.0/24
+ neighbor 10.0.0.6 remote-as 100
 ```
 
 **Script di init**
 
-Eseguirlo per iniziallizare FRR e configurare il router per le due VLAN.
-
-Le due VLAN sono VID=95 e VID=32.
-
-Le subnet associate ai due broadcast domain sono:
-
- * 192.168.2.8/30
-
- * 192.168.2.4/30
-
-La scelta di utilizzare due subnet con mask /30 è motivata:
-
- * Non c'è bisogno di andare a modificare ulteriormente il CE per l'advertisement di rotte ulteriori
-
- * Non si intasa il "namespace" della VPN (ogni site ha subnet 192.168.0.0/24, 192.168.1.0/24, ...)
-
- * Di fatto i due dispositivi sono in VPN site 2, ha senso poterli "identificare" con 
- IPv4 coerenti rispetto al "blocco" di indirizzi IP assegnato alla VPN site (e.g. se il blocco è 192.168.2.0/24, 
- identificarlo come 192.168.2.6 è meglio, invece che 192.168.3.1 o 10.0.0.1)
-
- * Longest prefix match - il router sa perfettamente identificare a quale subnet inoltrare
-
-Di contro, "togliamo" gli indirizzi delle subnet /30 alla subnet "principale" /24.
-
-Il resto è configurazione del trunk link, e assegnazione IP alle interfacce che supportano VLAN (router per queste ultime).
+Eseguirlo per iniziallizare FRR
 
 #### `net.sh`
 
@@ -638,22 +614,6 @@ Il resto è configurazione del trunk link, e assegnazione IP alle interfacce che
 #!/bin/bash
 
 vtysh -f frrconf
-
-sysctl -w net.ipv4.ip_forward=1
-
-ip link add link eth1 name eth1.95 type vlan id 95
-ip link add link eth1 name eth1.32 type vlan id 32
-ip link set eth1.95 up
-ip link set eth1.32 up
-
-VLAN_95_IPADDR=192.168.2.9/30
-VLAN_32_IPADDR=192.168.2.5/30
-
-#VLAN_95_IPADDR=192.168.4.1/24
-#VLAN_32_IPADDR=192.168.3.1/24
-
-ip addr add $VLAN_95_IPADDR dev eth1.95
-ip addr add $VLAN_32_IPADDR dev eth1.32
 ```
 
  * **RADIUS**
@@ -734,34 +694,65 @@ clientb2 Cleartext-Password := "clientb2passwd"
         Tunnel-Private-Group-ID = 95
 ```
 
-## Configurazione della VPN site 3
+## Configurazione della VPN site 2
 
- * **CE3**
+ * **CE2**
 
 **Configurazione FRR**
 
 Viene configurato, in FRR, l'IPv4 su entrambe le interfacce e sopratutto il route advertisement
-automatico verso il provider edge (con BGP) della subnet della VPN site 3 (192.168.1.0/24).
+automatico verso il provider edge (con BGP) della subnet della VPN site 2 (192.168.2.0/24).
 
 #### `frrconf`
 
 ```bash
 interface eth0
- ip address 10.0.0.5/30
+ ip address 10.0.0.9/30
 
 interface eth1
- ip address 192.168.1.1/24
+ ip address 192.168.2.1/24
 
-ip route 0.0.0.0/0 10.0.0.6
+ip route 0.0.0.0/0 10.0.0.10
 
-router bgp 65001
- network 192.168.1.0/24
- neighbor 10.0.0.6 remote-as 100
+router bgp 65002
+ network 192.168.2.0/24
+ neighbor 10.0.0.10 remote-as 100
 ```
 
 **Script di init**
 
-Eseguirlo per iniziallizare FRR
+Eseguirlo per iniziallizare FRR e configurare il router per le due VLAN.
+
+Le due VLAN sono VID=95 e VID=32.
+
+Le subnet associate ai due broadcast domain sono:
+
+ * 192.168.2.8/30
+
+ * 192.168.2.4/30
+
+La scelta di utilizzare due subnet con mask /30 è motivata:
+
+ * Non c'è bisogno di andare a modificare ulteriormente il CE per l'advertisement di rotte ulteriori
+
+ * Non si intasa il "namespace" della VPN (ogni site ha subnet 192.168.0.0/24, 192.168.1.0/24, ...)
+
+ * Di fatto i due dispositivi sono in VPN site 2, ha senso poterli "identificare" con 
+ IPv4 coerenti rispetto al "blocco" di indirizzi IP assegnato alla VPN site (e.g. se il blocco è 192.168.2.0/24, 
+ identificarlo come 192.168.2.6 è meglio, invece che 192.168.3.1 o 10.0.0.1)
+
+ * Longest prefix match - il router sa perfettamente identificare a quale subnet inoltrare
+
+Di contro, "togliamo" gli indirizzi delle subnet /30 alla subnet "principale" /24.
+
+Il resto è configurazione del trunk link, e assegnazione IP alle interfacce che supportano VLAN (router per queste ultime).
+
+*Nota: le variabili bash VLAN_95/32_IPADDR commentate indicano le alternative /24 per gli indirizzi da assegnare alle VLAN 95 e 32*
+*, per cambiarli, bisogna commentare le variabili dello stesso nome non commentate*
+*e decommentare quelle commentate*
+*in questo file, e IPADDR/GATEWAY in net.sh di client-B1 e client-B2*
+*per ottenere il comportamento di reachability in tutta la VPN delle VLAN,*
+*è necessario aggiungere network 192.168.3.0/24 e network 192.168.4.0/24 in frrconf di CE2* 
 
 #### `net.sh`
 
@@ -769,6 +760,22 @@ Eseguirlo per iniziallizare FRR
 #!/bin/bash
 
 vtysh -f frrconf
+
+sysctl -w net.ipv4.ip_forward=1
+
+ip link add link eth1 name eth1.95 type vlan id 95
+ip link add link eth1 name eth1.32 type vlan id 32
+ip link set eth1.95 up
+ip link set eth1.32 up
+
+VLAN_95_IPADDR=192.168.2.9/30
+VLAN_32_IPADDR=192.168.2.5/30
+
+#VLAN_95_IPADDR=192.168.4.1/24
+#VLAN_32_IPADDR=192.168.3.1/24
+
+ip addr add $VLAN_95_IPADDR dev eth1.95
+ip addr add $VLAN_32_IPADDR dev eth1.32
 ```
 
  * **switch**
@@ -933,6 +940,9 @@ L'identità è sicura da usare:
 Il messaggio RADIUS Access-Reject viene ignorato, finchè non si riscontra un messaggio RADIUS Access-Accept 
 corrispondente a quello EAPOL (sempre matchando l'identità), l'autenticazione della stazione rimane pendente, 
 dopo un tot di tempo che la richiesta di auth rimane pendente (1 minuto), quest'ultima viene eliminata.
+
+Al programma XDP RADIUS, "interessa" solo ed esclusivamente di RADIUS Access-Accept, che è l'unico messaggio RADIUS
+che può far cambiare lo stato della stazione da autenticazione pendente a autenticata.
 
 E' accettabile che vengano fatte ulteriori richieste, che sostituiscono la precedente, pendente, solo dalla
 stessa interfaccia da cui è stata generata quest'ultima.
