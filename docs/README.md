@@ -750,8 +750,8 @@ Il resto è configurazione del trunk link, e assegnazione IP alle interfacce che
 *Nota: le variabili bash VLAN_95/32_IPADDR commentate indicano le alternative /24 per gli indirizzi da assegnare alle VLAN 95 e 32*
 *, per cambiarli, bisogna commentare le variabili dello stesso nome non commentate*
 *e decommentare quelle commentate*
-*in questo file, e IPADDR/GATEWAY in net.sh di client-B1 e client-B2*
-*per ottenere il comportamento di reachability in tutta la VPN delle VLAN,*
+*in questo file, e IPADDR/GATEWAY in net.sh di client-B1 e client-B2.*
+*Per ottenere il comportamento di reachability in tutta la VPN delle VLAN,*
 *è necessario aggiungere network 192.168.3.0/24 e network 192.168.4.0/24 in frrconf di CE2* 
 
 #### `net.sh`
