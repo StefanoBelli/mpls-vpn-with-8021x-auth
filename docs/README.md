@@ -55,7 +55,7 @@ Questo provider edge esporta le rotte con route-target 100:1 e importa solo rt 1
 La stessa cosa fa l'altro provider edge spoke: tutti e due importeranno solamente le rotte
 diffuse dal PE hub.
 
-###### `frrconf`
+#### `frrconf`
 
 ```bash
 interface eth0
@@ -112,7 +112,7 @@ router bgp 100 vrf vpnA
 Eseguirlo per configurare la VRF associata alla vpnA nel kernel, 
 abilitare funzionalità MPLS e configurare FRR.
 
-###### `net.sh`
+#### `net.sh`
 
 ```bash
 #!/bin/bash
@@ -157,7 +157,7 @@ al PE hub che poi lo inoltra al CE dell'hub che lo rimanda al PE hub.
 
 Il PE hub conosce tutte le rotte e quindi sa come inoltrarlo allo spoke di destinazione.
 
-###### `frrconf`
+#### `frrconf`
 
 ```bash
 interface eth1
@@ -216,7 +216,7 @@ Eseguirlo per configurare la VRF associata alla vpnA nel kernel,
 abilitare funzionalità MPLS, configurare FRR e 
 installare default route verso il CE dell'hub per la VRF associata alla vpnA.
 
-###### `net.sh`
+#### `net.sh`
 
 ```bash
 #!/bin/bash
@@ -248,7 +248,7 @@ Route target importa rotte 100:2 (PE hub) e esporta 100:1 (PE spoke).
 
 Finalizzando quindi la configurazione hub-and-spoke.
 
-###### `frrconf`
+#### `frrconf`
 
 ```bash
 interface eth1
@@ -305,7 +305,7 @@ router bgp 100 vrf vpnA
 Eseguirlo per configurare la VRF associata alla vpnA nel kernel, 
 abilitare funzionalità MPLS e configurare FRR.
 
-###### `net.sh`
+#### `net.sh`
 
 ```bash
 #!/bin/bash
@@ -331,7 +331,7 @@ Configurazione del label switched router della rete.
 Scambia le label più esterne dei frame MPLS e 
 ne effettua l'inoltro verso il prossimo router di competenza.
 
-###### `frrconf`
+#### `frrconf`
 
 ```bash
 interface eth0
@@ -369,7 +369,7 @@ mpls ldp
 
 Eseguirlo per configurare funzionalità MPLS nel kernel e FRR.
 
-###### `net.sh`
+#### `net.sh`
 
 ```bash
 #!/bin/bash
@@ -392,7 +392,7 @@ vtysh -f frrconf
 Viene configurato, in FRR, l'IPv4 su entrambe le interfacce e sopratutto il route advertisement
 automatico verso il provider edge (con BGP) della subnet della VPN site 1 (192.168.0.0/24).
 
-###### `frrconf`
+#### `frrconf`
 
 ```bash
 interface eth0
@@ -412,7 +412,7 @@ router bgp 65000
 
 Eseguirlo per iniziallizare FRR
 
-###### `net.sh`
+#### `net.sh`
 
 ```bash
 #!/bin/bash
@@ -426,7 +426,7 @@ vtysh -f frrconf
 
 Eseguirlo per configurare IPv4 
 
-###### `net.sh`
+#### `net.sh`
 
 ```bash
 #!/bin/bash
@@ -457,7 +457,7 @@ Eseguirlo per permettere ad AppArmor di memorizzare i profili nel kernel e impos
 dove vengono solo loggate le violazioni). Applica tutti i profili che
 trova nella sottodirectory "aaprofs"
 
-###### `mac/apply-aaprofs.sh`
+#### `mac/apply-aaprofs.sh`
 
 ```bash
 #!/bin/bash
@@ -486,7 +486,7 @@ echo "Exiting directory $PROFSDIR..."
 cd ..
 ```
 
-###### `mac/aaprofs/usr.bin.cat`
+#### `mac/aaprofs/usr.bin.cat`
 
 ```
 #include <tunables/global>
@@ -507,7 +507,7 @@ cd ..
 }
 ```
 
-###### `mac/aaprofs/usr.bin.curl`
+#### `mac/aaprofs/usr.bin.curl`
 
 ```
 #include <tunables/global>
@@ -526,7 +526,7 @@ cd ..
 }
 ```
 
-###### `mac/aaprofs/usr.bin.nmap`
+#### `mac/aaprofs/usr.bin.nmap`
 
 ```
 /usr/bin/nmap {
@@ -534,7 +534,7 @@ cd ..
 }
 ```
 
-###### `mac/aaprofs/usr.bin.rm`
+#### `mac/aaprofs/usr.bin.rm`
 
 ```
 #include <tunables/global>
@@ -563,7 +563,7 @@ cd ..
 }
 ```
 
-###### `mac/aaprofs/usr.bin.wireshark`
+#### `mac/aaprofs/usr.bin.wireshark`
 
 ```
 /usr/bin/wireshark {
@@ -571,7 +571,7 @@ cd ..
 }
 ```
 
-###### `mac/aaprofs/usr.bin.zenmap`
+#### `mac/aaprofs/usr.bin.zenmap`
 
 ```
 /usr/bin/zenmap {
@@ -588,7 +588,7 @@ cd ..
 Viene configurato, in FRR, l'IPv4 su entrambe le interfacce e sopratutto il route advertisement
 automatico verso il provider edge (con BGP) della subnet della VPN site 2 (192.168.2.0/24).
 
-###### `frrconf`
+#### `frrconf`
 
 ```bash
 interface eth0
@@ -632,7 +632,7 @@ Di contro, "togliamo" gli indirizzi delle subnet /30 alla subnet "principale" /2
 
 Il resto è configurazione del trunk link, e assegnazione IP alle interfacce che supportano VLAN (router per queste ultime).
 
-###### `net.sh`
+#### `net.sh`
 
 ```bash
 #!/bin/bash
@@ -671,7 +671,7 @@ freeradius, parsato e permette di convalidare l'auth request.
 Lo script copia comunque il file authorize sia come */etc/freeradius/3.0/users* 
 che come */etc/freeradius/3.0/mods-config/files/authorize*.
 
-###### `net.sh`
+#### `net.sh`
 
 ```bash
 #!/bin/bash
@@ -694,7 +694,7 @@ install -D -m444 authorize $INSTALLDIR/mods-config/files/authorize
 install -m444 authorize $INSTALLDIR/users
 ```
 
-###### `radius.sh`
+#### `radius.sh`
 
 ```bash
 #!/bin/bash
@@ -704,7 +704,7 @@ freeradius $@
 
 **Identificazione del client RADIUS (switch)**
 
-###### `clients.conf`
+#### `clients.conf`
 
 ```bash
 client vs2switch {
@@ -718,7 +718,7 @@ client vs2switch {
 
 Di particolare importanza è il Tunnel-Private-Group-ID che è la VLAN id da assegnare.
 
-###### `authorize (aka users)`
+#### `authorize (aka users)`
 
 ```bash
 clientb1 Cleartext-Password := "clientb1passwd"
@@ -743,7 +743,7 @@ clientb2 Cleartext-Password := "clientb2passwd"
 Viene configurato, in FRR, l'IPv4 su entrambe le interfacce e sopratutto il route advertisement
 automatico verso il provider edge (con BGP) della subnet della VPN site 3 (192.168.1.0/24).
 
-###### `frrconf`
+#### `frrconf`
 
 ```bash
 interface eth0
@@ -763,7 +763,7 @@ router bgp 65001
 
 Eseguirlo per iniziallizare FRR
 
-###### `net.sh`
+#### `net.sh`
 
 ```bash
 #!/bin/bash
@@ -802,7 +802,7 @@ I frame EAPOL hanno come destinazione PAE / Nearest-non-TPMR-bridge - lo switch 
 non può avere un vero e proprio indirizzo MAC - su questo effettua le operazioni di switching, 
 ma i frame di auth 802.1x/EAPOL sono diretti proprio verso lo switch che fa da authenticator.
 
-###### `net.sh`
+#### `net.sh`
 
 ```bash
 #!/bin/bash
@@ -842,7 +842,7 @@ INSTALLDIR=/etc/hostapd
 install -D -m600 hostapd.conf $INSTALLDIR/hostapd.conf
 ```
 
-###### `hostapd.sh`
+#### `hostapd.sh`
 
 ```bash
 #!/bin/bash
@@ -850,7 +850,7 @@ install -D -m600 hostapd.conf $INSTALLDIR/hostapd.conf
 hostapd -d /etc/hostapd/hostapd.conf
 ```
 
-###### `hostapd.conf`
+#### `hostapd.conf`
 
 ```bash
 # Control interface settings
@@ -914,7 +914,7 @@ La situazione è la seguente:
 
 Quando un client vuole autenticarsi, invia una richiesta EAPOL-Start allo switch (PAE).
 
-Prima o poi il client deve inviare una "Response, Identity" che viene intercettata dal programma XDP EAPOL.
+Prima o poi il client deve inviare una "Response, Identity" che viene intercettata dal programma XDP EAPOL, estraendone l'identità.
 
 Prima di continuare, è opportuno precisare che l'unico modo sicuro per correlare le richieste EAPOL 
 alle risposte di Accept di RADIUS è tramite l'identità a causa del fatto che lo switch forwarda su 
@@ -939,41 +939,43 @@ stessa interfaccia da cui è stata generata quest'ultima.
 
 Una volta che il messaggio Access-Accept viene riscontrato, si elimina la entry nella mappa dell'auth pending,
 se ne crea una nuova in quella delle stazioni autenticate e ogni ulteriore richiesta di autenticazione 
-della stazione viene ignorata. 
+della stazione autenticata viene ignorata. Dal messaggio RADIUS Access-Accept viene
+estratto il VLAN ID e inserito nella entry della stazione autenticata (finalizzazione dell'auth. da parte del programma XDP RADIUS).
 
-Il programma user effettua polling sulla mappa pinnata e rileva una nuova entry,
-che ancora non ha gestito, di stazione autenticata. Quindi esegue bridge vlan e ebtables per permettere 
-l'accesso alla LAN alla stazione: dalla mappa delle stazioni autenticate c'è la VLAN ID e il MAC della stazione,
-quindi flagga l'entry come "user_known". 
+Il programma user effettua polling sulla mappa delle stazioni autenticate e rileva una nuova entry,
+che ancora non ha gestito. Quindi esegue bridge vlan e ebtables per permettere 
+l'accesso alla LAN alla stazione e assegnargli un VLAN ID: dalla mappa delle stazioni autenticate c'è la VLAN ID e il MAC della stazione,
+quindi flagga l'entry come "user_known", in modo da sapere che l'entry
+è stata gestita.
 
 Ogni 5 secondi il programma userspace effettua una scansione lineare
 sulla mappa e capisce cosa deve fare.
 
-Il programma userspace viene informato dal programma XDP (sempre tramite polling):
+Inoltre, il programma userspace viene "informato" dal programma XDP (sempre tramite polling, aggiornando entry nella mappa eBPF):
 
  * Se la stazione ha inviato il frame EAPOL-Logoff
 
- * Quanto tempo fa la stazione ha trasmesso un pacchetto
+ * Quanto tempo fa la stazione ha trasmesso l'ultimo pacchetto
 
  * Se la stazione ha cambiato interfaccia
 
-Quando il programma XDP sulle interfacce eth0, eth1 rilevano la prima o la terza condizione,
+Quando il programma XDP EAPOL sulle interfacce eth0, eth1 rilevano la prima o la terza condizione,
 bloccano il traffico (XDP_DROP) per permettere all'user program di agire: impedire l'accesso alla rete in modo definitivo
 con ebtables e bridge vlan e rimuovere la entry dalla mappa eBPF.
 
 Il secondo caso è completamente a discrezione del programma user - il programma XDP segnala solamente quand'è che
-ha visto l'ultima volta pacchetti sull'interfaccia da quella stazione, l'user decide quando reputare la stazione disconnessa,
-ovvero quando è l'ultima volta che ha trasmesso un pacchetto, e agisce di conseguenza come nel punto precedente.
+ha visto l'ultima volta pacchetti sull'interfaccia da quella stazione, l'user decide quando reputare la stazione disconnessa, e agire di conseguenza come nel punto precedente.
 
 In realtà, di default il supporto per il rilevamento del fatto che la stazione ha cambiato interfaccia è acerbo, può dare problemi
 se si scambiano le interfacce delle due stazioni in certi interleaving, ma in più è stato implementato un supporto 
 migliore (comunque "sperimentale"), che si può abilitare decommentando 
 la linea "//#define EXTENDED_SUPPORT" nel file sorgente C del programma utente. 
 
-In ogni caso, l' "allow" da parte del programma utente consiste nell'aggiungere la regola -A FORWARD -s {mac} -j ACCEPT a ebtables,
+Di default (ovvero senza EXTENDED_SUPPORT) l' "allow" da parte del programma utente consiste nell'aggiungere la regola -A FORWARD -s {mac} -j ACCEPT a ebtables,
 assegnare il PVID (estratto dal messaggio RADIUS) untagged con bridge vlan sull'interfaccia, e il deny consiste in una regola
 -D FORWARD -s {mac} -j ACCEPT con ebtables (eliminando la regola installata prima) e il ripristino del PVID untagged 1 sull'interfaccia,
-eliminando quello installato prima.
+eliminando quello installato prima (è diverso per quanto riguarda
+EXTENDED_SUPPORT, ma è più di interesse la modalità di "default").
 
 **Breve guida all'utilizzo**
 
@@ -987,7 +989,7 @@ eliminando quello installato prima.
  
  * Eseguire make
 
- * Eseguire make install-xdp
+ * Eseguire make install-xdp (utilizza direttamente ip link per il caricamento e l'attach del programma XDP)
 
  * Eseguire ./xdp_prog_user
 
@@ -999,7 +1001,7 @@ Quando non è più necessario,
 
 **Header di configurazione**
 
-###### `proj3-xdp/config.h`
+#### `proj3-xdp/config.h`
 
 ```c
 #ifndef CONFIG_H
@@ -1021,7 +1023,7 @@ Quando non è più necessario,
 
 **Header di macro __die**
 
-###### `proj3-xdp/die.h`
+#### `proj3-xdp/die.h`
  
 ```c
 #ifndef DIE_H
@@ -1044,7 +1046,7 @@ Quando non è più necessario,
 
 **Header di defs per EAPOL**
 
-###### `proj3-xdp/eapol.h`
+#### `proj3-xdp/eapol.h`
 
 ```c
 #ifndef EAPOL_H
@@ -1077,7 +1079,7 @@ struct eapdata {
 
 **Header per le mappe**
 
-###### `proj3-xdp/maps.h`
+#### `proj3-xdp/maps.h`
  
 ```c
 #ifndef MAPS_H
@@ -1116,7 +1118,7 @@ struct {
 
 **Header per le defs. RADIUS**
 
-###### `proj3-xdp/radius.h`
+#### `proj3-xdp/radius.h`
 
 ```c
 #ifndef RADIUS_H
@@ -1158,7 +1160,7 @@ struct radiusavphdr {
 
 **Header per value mappa utilizzato anche dal programma user**
 
-###### `proj3-xdp/shmapsdefs.h`
+#### `proj3-xdp/shmapsdefs.h`
  
 ```c
 #ifndef SHMAPSDEFS_H
@@ -1178,7 +1180,7 @@ struct authd_sta_val {
 
 **Sorgente C programma XDP EAPOL**
 
-###### `proj3-xdp/xdp_prog_kern_eapol.c`
+#### `proj3-xdp/xdp_prog_kern_eapol.c`
 
 ```c
 #include <linux/bpf.h>
@@ -1329,7 +1331,7 @@ char LICENSE[] SEC("license") = "GPL";
 
 **Sorgente C programma XDP RADIUS**
 
-###### `proj3-xdp/xdp_prog_kern_radius.c`
+#### `proj3-xdp/xdp_prog_kern_radius.c`
  
 ```c
 #include <linux/bpf.h>
@@ -1496,7 +1498,7 @@ char LICENSE[] SEC("license") = "GPL";
 
 **Sorgente C programma utente**
 
-###### `proj3-xdp/xdp_prog_user.c`
+#### `proj3-xdp/xdp_prog_user.c`
  
 ```c
 #include <stdio.h>
@@ -1866,7 +1868,7 @@ static void event_polling(int map) {
 
 **Makefile**
 
-###### `proj3-xdp/Makefile`
+#### `proj3-xdp/Makefile`
  
 ```Makefile
 # SPDX-License-Identifier: (GPL-2.0 OR BSD-2-Clause)
@@ -1947,7 +1949,7 @@ deep-reinstall:
 
 Eseguirlo per configurare IPv4 e copiare file di config di wpa_supplicant
 
-###### `net.sh`
+#### `net.sh`
 
 ```bash
 #!/bin/bash
@@ -1965,7 +1967,7 @@ INSTALLDIR=/etc
 install -D -m400 wpa_supplicant.conf $INSTALLDIR/wpa_supplicant.conf
 ```
 
-###### `wpa_supplicant.conf`
+#### `wpa_supplicant.conf`
 
 ```bash
 ap_scan=0
@@ -1978,7 +1980,7 @@ network={
 }
 ```
 
-###### `wpa_supplicant.sh`
+#### `wpa_supplicant.sh`
 
 ```bash
 #!/bin/bash
@@ -1992,7 +1994,7 @@ wpa_supplicant -B -c/etc/wpa_supplicant.conf -Dwired -ieth0
 
 Eseguirlo per configurare IPv4 e copiare file di config di wpa_supplicant
 
-###### `net.sh`
+#### `net.sh`
 
 ```bash
 #!/bin/bash
@@ -2010,7 +2012,7 @@ INSTALLDIR=/etc
 install -D -m400 wpa_supplicant.conf $INSTALLDIR/wpa_supplicant.conf
 ```
 
-###### `wpa_supplicant.conf`
+#### `wpa_supplicant.conf`
 
 ```bash
 ap_scan=0
@@ -2023,7 +2025,7 @@ network={
 }
 ```
 
-###### `wpa_supplicant.sh`
+#### `wpa_supplicant.sh`
 
 ```bash
 #!/bin/bash
