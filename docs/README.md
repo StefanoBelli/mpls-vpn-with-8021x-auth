@@ -733,7 +733,8 @@ Le subnet associate ai due broadcast domain sono:
 
 La scelta di utilizzare due subnet con mask /30 è motivata:
 
- * Non c'è bisogno di andare a modificare ulteriormente il CE per l'advertisement di rotte ulteriori
+ * Non c'è bisogno di andare a modificare ulteriormente il CE per l'advertisement di rotte ulteriori 
+ (se la VLAN deve essere raggiungibile dal resto della VPN)
 
  * Non si intasa il "namespace" della VPN (ogni site ha subnet 192.168.0.0/24, 192.168.1.0/24, ...)
 
@@ -744,8 +745,6 @@ La scelta di utilizzare due subnet con mask /30 è motivata:
  * Longest prefix match - il router sa perfettamente identificare a quale subnet inoltrare
 
 Di contro, "togliamo" gli indirizzi delle subnet /30 alla subnet "principale" /24.
-
-Il resto è configurazione del trunk link, e assegnazione IP alle interfacce che supportano VLAN (router per queste ultime).
 
 *Nota: le variabili bash VLAN_95/32_IPADDR commentate indicano le alternative /24 per gli indirizzi da assegnare alle VLAN 95 e 32*
 *, per cambiarli, bisogna commentare le variabili dello stesso nome non commentate*
